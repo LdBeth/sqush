@@ -1215,11 +1215,13 @@ Q1"T                                    ! if error flag                 !
 @!+
         MW                              !  refresh scope                !
         0,0XW                           !  clear W.str (/W switch)      !
-+
         7^T                             !  sound bell                   !
++
         ^^?^T                           !  display "?"                  !
         :G1                             !  display 1.str                !
+@!+
         7^T                             !  sound bell                   !
++
         13^T                            !  display <CR>                 !
         10^T                            !  display <LF>                 !
         -1U1                            !  set Z-macro return to -1     !
@@ -1229,5 +1231,140 @@ Q1                                      ! push Z-macro return val       !
 }                                       !! end of ^UZ
 
 !! Done loading squisher macro into Q-register Z
+
+!! Load squish driver macro into Q-register A
+
+@^UA{                                   !! str A <- squish driver macro
+-1^X                                    ! search flag = exact matches   !
+@^UE%.-Z%                               ! E.str = -# chars to buf end   !
+QO"N                                    ! if max line length not 0      !
+        ZJ                              !   jump buf end                !
+        @I% %                           !   insert <SP>, insure we halt !
+'                                       ! endif                         !
+J                                       ! jump to beginning of buffer   !
+MZ"E                                    ! if squish macro returns OK    !
+        ! ------------------------------------------------------------- !
+        ! at this point, everything is squished; but, if the /L switch  !
+        ! was set, we've deleted all lexical CR/LF's and have to go     !
+        ! back and insert CR/LF wherever needed so the line is no       !
+        ! longer than the width specified with /L:nn.                   !
+        ! ------------------------------------------------------------- !
+        QO"N                            !   if max line length not 0    !
+                :QW"N                   !     if /W was TRUE            !
+                        -1,3:W^[         !       turn on SEEALL mode     !
+                        0,4:W^[          !       clear "mark" status     !
+                        0,5:W^[          !       turn off hold mode      !
+                '                       !     endif                     !
+                J                       !     jump to beginning of buf  !
+                <                       ! ----loop begin--------------- !
+@!+
+                        MW              !       refresh scope           !
++
+                        ! --------------------------------------------- !
+                        ! the following loop advances through the edit  !
+                        ! buffer, looking for a character with the high !
+                        ! bit set.                                      !
+                        ! --------------------------------------------- !
+                        <               ! ------loop begin------------- !
+                                0A&128"N        ! if high bit is set    !
+                                        0;      !   break out of loop   !
+                                '               ! endif                 !
+                                C       !         advance 1 char        !
+                        >               ! ------loop end--------------- !
+                        0A&127-13"E     !       if char is <CR>         !
+                                D       !         delete it             !
+                        '               !       endif                   !
+                        D               !       delete <LF>             !
+                        .-Z;            !       break if at end of buf  !
+                        .U0             !       0.num = current buf ptr !
+                        ! --------------------------------------------- !
+                        ! --------------------------------------------- !
+                        <               ! ------loop begin------------- !
+                                0A&128"N        ! if hi bit clear       !
+                                        0;      !   break out of loop   !
+                                '               ! endif                 !
+                                C       !         advance 1 char        !
+                        >               ! ------loop end--------------- !
+                        ! --------------------------------------------- !
+                        ! --------------------------------------------- !
+                        <               ! ------loop begin------------- !
+                                .U1     !         1.num = cur buf ptr   !
+                                0L      !         go to begin of line   !
+                                .-Q0-1"L        ! if                    !
+                                        0;      !   break out of loop   !
+                                '               ! endif                 !
+                                R       !         back up one char      !
+                        >               ! ------loop end--------------- !
+                        Q1J
+                        -(0^Q)-QO"G     !       if                      !
+                                Q0J     !                               !
+                                -1A-27"E        ! if last char was ESC  !
+                                        @I% %   !   insert <SP>         !
+                                '               ! endif                 !
+                                13@I%% 10@I%%
+                                        !       insert <CR><LF>         !
+                        '               !       endif                   !
+                >                       ! ----loop end----------------- !
+                ! ----------------------------------------------------- !
+                ! the following loop deletes trailing CR's, LF's, and   !
+                ! <SP>'s from the end of the buffer                     !
+                ! ----------------------------------------------------- !
+                <                       ! ----loop begin--------------- !
+                        ZJ              !       jump to buf end         !
+                        -Z;             !       break if buf empty      !
+                        -1A-10"N        !       is it LF?               !
+                                -1A-13"N        ! is it CR?             !
+                                        -1A-32"N        !   is it <SP>? !
+                                                0;      !     break     !
+                                        '               !   endif       !
+                                '               ! endif                 !
+                        '               !       endif                   !
+                        -D              !       delete it               !
+                >                       ! ----loop end----------------- !
+@!+
+                MW                      !     refresh scope             !
++
+        '                               !   endif                       !
+        ! ------------------------------------------------------------- !
+        ! make sure the edit buffer ends in a CR/LF.                    !
+        ! ------------------------------------------------------------- !
+        QH"F                            !   if no adjacent escapes      !
+                ZJ                      !     jump to buf end           !
+                ."E                     !     if at beginning of buf    !
+                        10@I%%          !       insert <LF>             !
+                '                       !     endif                     !
+                -1A-10"N                !     if prev char is not <LF>  !
+                        10@I%%          !       insert <LF>             !
+                '                       !     endif                     !
+                R                       !     back up one char          !
+                ."E                     !     if at beginning of buf    !
+                        13@I%%          !       insert <CR>             !
+                '                       !     endif                     !
+                -1A-13"N                !     if prev char is not <CR>  !
+                        13@I%%          !       insert <CR>             !
+                '                       !     endif                     !
+        '                               !   endif                       !
+        ZJ                              !   jump to buf end             !
+@!+
+        ! ------------------------------------------------------------- !
+        ! clean up the scope                                            !
+        ! ------------------------------------------------------------- !
+        :QW"N                           !   if /W was TRUE              !
+                0:W-4"E                 !     if VT100 in ANSI mode     !
+                        2,0:W^[          !       set VT100 in VT52 mode  !
+                '                       !     endif                     !
+                -1,3:W^[                 !     turn on SEEALL mode       !
+                0,4:W^[                  !     clear "mark" status       !
+                MW                      !     refresh scope             !
+        '                               !   endif                       !
++
+|                                       ! else (Z macro returned err)   !
+        :@^A/?Squish run failed; aborting any output/
+        0,0XF                           !   clear F.str                 !
+'                                       ! endif                         !
+0^X                                     ! reset search mode flag        !
+}                                       !! end of ^UA
+
+!! Done loading squish driver macro into Q-register A
 
 ^[^[

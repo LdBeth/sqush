@@ -10,7 +10,7 @@ qo= 10^T
 :g8 10^T
 hk
 :@^A/Test macro:/
-@i% 1 2, 3 4K  HK EX%
+@i%@i/What the heck?/% j
 mz
 hthk
 ^[^[
