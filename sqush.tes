@@ -417,8 +417,10 @@ J                               !! go to beginning
 '                               !! fi
 0QQ "A                          !! if /P is alphabetic
         0QQ&95-^^Y "E           !!   if 'y' or 'Y'
+                -1UP            !!     num P <- TRUE
                 :@^U8%)>]%      !!     only search right pair
         |                       !!   else (is traditional)
+                0UP             !!     num P <- FALSE
                 :@^U8%()<>[]%   !!     can use all ASCII
         '                       !!   fi
 '                               !! fi
@@ -705,7 +707,7 @@ Q0"V                                    ! if Q-reg name is lowercase    !
         Q0@I%%                          !   insert uppercase char       !
 '                                       ! endif                         !
 Q1"T                                    ! if @-modified                 !
-        0A-(1A)"E                       !   if @^Uq<delim>text<delim>   !
+        0A-(1A)"E                       !   if @^Uq<delim><delim>       !
                 @O!$$!                  !     goto $$                   !
         '                               !   endif                       !
 |                                       ! else                          !
@@ -718,16 +720,16 @@ Q1"T                                    ! if @-modifed                  !
         0A@^U1%%                        !   1.str = <delim>             !
         D                               !   delete <delim>              !
 '                                       ! endif                         !
+@!+
 :QW"N                                   ! if /W was TRUE                !
         :@S%^EQ1%"U                     !   if search for <delim> fails !
                 @O!STRINGFAIL!          !     unterminated string       !
         '                               !   endif                       !
         .,4:W^[                          !   set mark status             !
         QSJ                             !   jump back to where we were  !
-@!+
         MW                              !   refresh scope               !
-+
 '                                       ! endif                         !
++
 
 ! --------------------------------------------------------------------- !
 ! if there are no "non-squishable ^U command" characters, you used the  !
@@ -758,10 +760,12 @@ Q1"T                                    ! if @-modifed                  !
                 ^^YU0                   !     0.num = Y                 !
         '                               !   endif                       !
 '                                       ! endif                         !
+@!+
 :QW"N                                   ! if /W was TRUE                !
         0,4:W^[                          !   clear "mark" status         !
         32768W                          !   set huge # of display lines !
 '                                       ! endif                         !
++
 
 ! --------------------------------------------------------------------- !
 ! at this point, 0.num will be "Y" if we are to sub-squish the ^U text  !
