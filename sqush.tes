@@ -21,6 +21,8 @@ EO - 200 "L
 !!   where the ? can be replace by any delim. The char set will
 !!   be appended to the default SP/TAB char set. Strpping of
 !!   alternative comment form would always happen.
+!! * New switch /P for handle paired delimiter, accepting
+!!   arg Y or N.
 
 !! str 9: a mask containing labels we'll use in a goto.  Each
 !! character in the mask corresponds with a TECO command character
@@ -388,13 +390,46 @@ J                                       !! go to beginning
 !!   %`abcdefghijklmnopqrstuvwxyz{|}~ %
 :@^U9%.LLLLLLLLLLLLLLLLLLLLLLLLLL....D%
 
+!! Check for /P "Paired Delimiter" switch
+
 !! Load Q-register 8 with potential <delim> characters
 
-@^U8%/#*&\?()$!@%                       !! pre-load str 8
-1U8                                     !! num 8 <- 1
-126<                                    !! this loop appends ASCII chars
-        Q8:@^U8%% %8^[                   !! ^A to ~ to str 8
-   >
+@^U8%/#+*&\?$!@"'=|~%           !! frequently used char
+37:@^U8%%                       !! append '%'
+1U8                             !! num 8 <- 1
+31<                             !! appends non printable ASCII chars
+        Q8:@^U8%% %8^[           !! ^A to ^_ to str 8
+>
+44U8
+16<                             !! skip space
+        Q8:@^U8%% %8^[           !! , to ;
+>
+J                               !! go to beginning
+:@FS%/P%% "S                    !! if /P
+        MY                      !!   get arg
+|                               !! else (no /P)
+        QB "T                   !!   if other switches present
+                @^UQ%%          !!     str Q <- ""
+        |                       !!   else
+                @I%Use paired delimiter (Y/N) <N>? %
+                ^^QMR           !!     ask for /P
+        '                       !!   fi
+'                               !! fi
+0QQ "A                          !! if /P is alphabetic
+        0QQ&95-^^Y "E           !!   if 'y' or 'Y'
+                :@^U8%)>]%      !!     only search right pair
+        |                       !!   else (is traditional)
+                :@^U8%()<>[]%   !!     can use all ASCII
+        '                       !!   fi
+'                               !! fi
+65U8
+26<                             !! append A - Z
+        Q8:@^U8%% %8^[
+>
+94U8
+29<                             !! append ^ - z
+        Q8:@^U8%% %8^[
+>
 
 !! Check for /W "Watch progress" switch
 
