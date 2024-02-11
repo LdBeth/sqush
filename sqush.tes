@@ -1,0 +1,477 @@
+! SQUSH.TES for TECO-64 !
+0,128ET
+EO - 200 "L
+    @^A%Macro requires TECO-64% 13^T 10^T ^C
+'
+!! The original SQU.TES source cannot be directly run in TECO
+!! because it is formatted with TABs which TECO treats as commands.
+!! In other words, it needs to be bootstrapped.
+!! This is a cleaned up version that can be directly run by TECO-64,
+!! it uses new features in TECO-64 thus can not be used for other
+!! TECO implementations.
+
+!! Additional notes:
+!! * Current version based on TECO-64 200.36.7
+!! * Due to #21, usage of go to labels in macro R is rewrote using
+!!   loop construct.
+!! * TECO-64 forbids interleaved loop exit such as < D .-Z; 0A"D > '.
+!! * /W switch is disabled.
+
+!! str 9: a mask containing labels we'll use in a goto.  Each
+!! character in the mask corresponds with a TECO command character
+!! and controls some action the squisher takes when it runs into
+!! that TECO command.  For example, if the squisher runs into
+!! <NUL>, the squisher uses the first character in the 9.str mask
+!! as a label to goto which handles <NUL>'s.  The mask characters
+!! are:
+!!
+!!         1       command takes character argument
+!!         A       ^A command
+!!         B       delete if line is blank
+!!         D       delete character from output
+!!         E       E command
+!!         F       F command
+!!         L       lowercase char (convert to uppercase)
+!!         O       optionally delete character from output
+!!         T       TAB char
+!!         U       ^U command
+!!         V       ^^ command, leave next char as is
+!!         Z       ^Z command, convert to <CARET>-Z
+!!         ^       (caret) next char is really CTRL-char
+!!         $       command takes string argument(s)
+!!         .       (dot) pass character through w/o squishing
+!!         @       the next command is '@' modified
+
+!! Load Q-register F with SQU initialization macro.
+^UF                             !! initialization macro
+^D                              !! set decimal
+0ED                             !! set edit mode zero
+0^X                             !! set search mode zero
+ET&128 "N                       !! if abort-on-error not set
+        0,0XP                   !!   clear str P
+'                               !! fi
+0,128ET                         !! set abort-on-error
+J                               !! go to beginning
+< @FS%^ES%%; >                  !! remove white space in buffer
+J                               !! return beginning
+:@S%/%                          !! look for '/' switch
+UB                              !! -> num B
+QB "T                           !! if switches
+        ET&64 "E                !!   if not detached
+                13 ^T 10 ^T     !!     type <CR><LF>
+        '                       !!   fi
+'                               !! fi
+
+!! R get Response from user
+@^UR{
++0U.3                           !! num 3 <- Q-reg name on argument stack
+^YX.0                           !! str 0 <- last inserted string
+^YK                             !! kill display prompt
+Q.3&127 "R                      !! if Q-reg name in num 3 is alphanumeric
+.U.1                            !! num 1 <- current point
+ZJ                              !! go to end
+.U.2                            !! num 2 <- save buffer end pos
+
+!! build a mini-macro in Q-reg 1 which will put the user's response
+!! into the Q-reg we are using to return the user's response in.
+@I%Q2,.X%                       !! insert text to buffer
+Q.3&127@I%%                     !! insert Q-reg name
+Q.2,.X.1                        !! save the inserted macro
+Q.2,.K                          !! and clean up it
+
+!! display the prompt on a new, clean, line
+
+-1U.X <                         !! PROMPT:
+
+13^T10^T                        !! type <CR><LF>
+@!+                             !! ET does not work for TECO-64
+13^T                            !! type <CR>
+ET&512 "N                       !! if on scope terminal emit clear sequence
+        0,1ET                   !!   inhibit type-out conversions
+        27^T                    !!   type <ESC>
+        1,0ET                   !!   enable type-out conversions
+        0:W-4"E                 !!   if VT100 in ANSI mode
+                ^^[             !!     type [
+        '                       !!   fi
+        ^^J^T                   !!   type J
+|                               !! else (not on scope)
+        10^T                    !!   type <LF>
+'                               !! fi
++
+.-Q.2+(0^Q) "G                  !! if anything on current line
+        0T                      !!   type the line
+|                               !! else
+        :G.0                    !!   type str 0
+        Q.2,ZT                  !!   and input so far
+'                               !! fi
+
+!! Read characters from the console & insert them into the edit buffer.
+
+<                               !! GETCH:
+
+^TU.0                           !! read char to num 0
+Q.0-127 "E                      !! if char = <DEL>
+        Z-Q.2 "N                !!   if anything been inserted
+                -D              !!     backspace
+        '                       !!   fi
+        1;                      !!   go to PROMPT
+'                               !! fi
+Q.0-21 "E                       !! if char = ^U
+        Q.2,ZK                  !!   clear input line
+        1;                      !!   go to PROMPT
+'                               !! fi
+Q.0-18 "E                       !! if char = ^R
+        13^T 10^T               !!   type <CR> <LF>
+        :G.0                    !!   type prompt in str 0
+        Q.2,ZT                  !!   type current input
+        F<                      !!   go to GETCH
+'                               !! fi
+Q.0-26 "E                       !! if char = ^Z
+        Q.2,ZK                  !!   kill input
+        :%.0                    !! inc char so ^Z becomes <ESC>
+'                               !! fi
+Q.0-27 "E                       !! if char = <ESC>
+        13^T 10^T               !!   type <CR> <LF>
+        1U.X 1;                 !!   go to DONE
+'                               !! fi
+Q.3&128 "E                      !! if hi-bit of return Q-reg name is zero
+        Q.0-10 "E               !!   if char = <LF>
+                13^T            !!     display <CR>
+                1U.X 1;         !!     go to DONE
+        '                       !!   fi
+        Q.0-13 "E               !!   if char = <CR>
+                ^T^[             !!     absorb next char
+                1U.X 1;         !!     go to DONE
+        '                       !!   fi
+'                               !! fi
+Q.0@I%%                         !! insert input char to buffer
+>                               !! go to GETCH
+
+Q.X; >                          !! DONE:
+
+M.1                             !! run macro 1 to load Q-reg w/response
+Q.2,.K                          !! clean up input
+
+Q.1J                            !! restore to original buffer position
+
+|                               !! else (Q.3 not alphanumeric)
+        @:^A%?Invalid Q-register in INPLIN%
+'                               !! fi (Q.3&127 "R)
+}                               !! end of ^UR
+
+!! Check for command line switches.
+
+!! Y short hand for read command arg
+@^UY{
+::@FS%:%% "S            !! if :arg
+        0A@^UQ%%        !!   str Q <- arg
+        D               !!   delete arg
+|                       !! else
+        @^UQ%Y%         !!   default "Y"
+'                       !! fi
+}                       !! end of ^UY
+
+!! Check for /D "Delete CR/LF"
+
+0,0X9                           !! clear mask in str 9
+J                               !! go to beginning
+:@FS%/D%% "S                    !! if /D
+        MY                      !!   get arg
+|                               !! else (no /D)
+        QB "T                   !!   if other switches present
+                @^UQ%%          !!     str Q <- ""
+        |                       !!   else
+                @I%Delete CR/LF (Y/N) <N>? %
+                ^^QMR           !!     ask for /D
+        '                       !!   fi
+'                               !! fi
+0QQ "A                          !! if /D is alphabetic
+        0QQ&95-^^Y "E           !!   if 'y' or 'Y'
+                !! load str 9 with labels for control chars, with <LF>,
+                !! <CR>, and <SP> marked as D.
+                !!
+                !!  %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ %
+                @^U9%DA.......TD..D.......U....Z...V.D%
+        '                       !!   fi
+'                               !! fi
+
+!! Check for /L "Set line lengths" switch.
+
+<                                       !! BADNUM: re-ask if :nn bad
+0UO                                     !! clear num O
+J                                       !!   go to beginning
+:Q9 "N                                  !! if /D:Y set
+        :@FS%/L%% "S                    !!   and if /L, delete it
+                @:^A"%/L specified with /D, /L ignored"
+                ::@FS%:%% "S            !!     if :arg
+                        0A "D           !!       if arg is numberic
+                                < D .-Z; 0A "D | 1; ' > !! delete nn
+                        |               !!       else
+                                D       !!         delete arg
+                        '               !!       fi
+                '                       !!     fi
+        '                               !!   fi
+|                                       !! else (no D:Y)
+        :@FS%/L%% "S                    !!   if /L
+                ::@FS%:%% "S            !!     if :arg
+                        0A@^UQ%%        !!       str Q <- arg
+                        0A "D           !!       if arg is numberic
+                                < D .-Z; 0A "D 0A:@^UQ%% | 1; ' > !! get nn
+                        |               !!       else
+                                D       !!         delete arg
+                        '               !!       fi
+                |                       !!     else (no :arg)
+                        @^UQ%Y%         !!       str Q <- "Y"
+                '                       !!     fi
+        |                               !!   else (no /L)
+                QB "T                   !!     if other switches
+                        @^UQ%%          !!       str Q <- ""
+                |                       !!     else
+                        @I%Set line lengths (Y for 70, N, or length) <N>? %
+                        ^^QMR           !!       ask for /L
+                '                       !!     fi
+        '                               !!   fi
+        0QQ "A                          !!   if /L is alphabetic
+                0QQ&95-^^Y "E           !!     if is 'y' or 'Y'
+                        !! load 9.str with labels for control chars,
+                        !! with <LF>, <CR>, and <SP> marked as O.
+                        !!
+                        !!  %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ %
+                        @^U9%DA.......TO..O.......U....Z...V.O%
+                        70UD            !!       set line length to 70
+                '                       !!     fi
+        '                               !!   fi
+        0QQ "D                          !!   if /L is numberic
+                .UQ                     !!     save current pos
+                ZJ                      !!     go to pos end
+                GQ                      !!     put /L str in buffer
+                ^SC                     !!     go to /L str begin
+                \UO                     !!     put str in num O
+                ^SD                     !!     clean up
+                .-Z "N                  !!     if anything left over
+                        ZK              !!       kill them
+                        QQJ             !!       restore pos
+                        F<              !!       go to BADNUM
+                '                       !!     fi
+                QQJ                     !!     restore pos
+                QO "E                   !!     if /L is 0
+                        F<              !!       go to BADNUM
+                '                       !!     fi
+                !! load str 9 with labels for control chars, with <LF>,
+                !! <CR>, and <SP> marked as O.
+                !!
+                !!  %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ %
+                @^U9%DA.......TO..O.......U....Z...V.O%
+        '                               !!   fi
+' 1; >                                  !! fi
+
+!! Check for /B "Delete blank lines" switch
+
+J                                       !! go to beginning
+:Q9 "N                                  !! if had /D:Y
+        :@FS%/B%% "S                    !!   if /B
+                ::@FS%:%% "S            !!     if :arg
+                        0A-^^N "E       !!       if /B:N ignore it
+                                @^A"%/B:N specified with /D or /L,"
+                                @:^A" /B:N ignored"
+                        '               !!       fi
+                        D               !!       delete arg
+                '                       !!     fi
+        '                               !!   fi
+|                                       !! else (no /D:Y)
+        :@FS%/B%% "S                    !!   if /B
+                MY                      !!     get arg
+        |                               !!   else
+                QB"T                    !!     if any other switches
+                        @^UQ%%          !!        str Q <- ""
+                |                       !!     else
+                        @I%Delete blank lines (Y/N) <N>? %
+                        ^^QMR           !!       ask for /B value
+                '                       !!     fi
+        '                               !!   fi
+        0QQ "A                          !!   if /B is alphabetic
+                0QQ&95-^^Y "E           !!     if it's 'y' or 'Y'
+                        !! load str 9 with labels for control chars,
+                        !! with <LF> marked as B and <SP> marked as D.
+                        !!
+                        !!  %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ %
+                        @^U9%DA.......TB..........U....Z...V.D%
+
+                '                       !!     fi
+        '                               !!   fi
+'                                       !! fi
+
+!! Supply the default labels which only deletes <NUL> and <SP>
+
+:Q9 "E                                  !! if str 9 is empty
+                                        !!   load default mask
+        !!  %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ %
+        @^U9%DA.......T...........U....Z...V.D%
+'                                       !! fi
+
+!! Check for /T "Delete lexical TABs and FFs" switch.
+
+J                                       !! go to beginning
+:@FS%/T%% "S                            !! if /T
+        MY                              !!   get arg
+|                                       !! else
+        QB "T                           !!   if any other switches
+                @^UQ%%                  !!     str Q <- ""
+        |                               !!   else
+                @I%Delete lexical TABs and FORM FEEDs (Y/N) <N>? %
+                ^^QMR                   !!     ask for /T
+        '                               !!   fi
+'                                       !! fi
+0QQ "A                                  !! if /T is alphabetic
+        0QQ&95@^UQ%%                    !!   convert to uppercase
+'                                       !! fi
+
+!! if /T is "Y"
+
+0QQ-^^Y "E              !! if /T is 'Y'
+        J               !!   go to beginning
+        G9              !!   load mask to buffer
+        9J              !!   go to TAB entry
+        D @I%O%         !!   replace by 'O'
+        12J             !!   go to FF entry
+        D @I%O%         !!   replace
+        J 0,33X9 0,33K  !!   save mask and cleanup
+'                       !! fi
+
+!! Check for /C "Delete comments" switch.
+
+@^UC%%                                  !! str C <- ""
+J                                       !! go to beginning
+:@FS%/C%% "S                            !! if /C
+        MY                              !!   get arg
+|                                       !! else
+        QB "T                           !!   if any other switches
+                @^UQ%%                  !!     str Q <- ""
+        |                               !!   else
+                @I%Delete comments (Y for SP/TAB, N, or set) <N>? %
+                ^^QMR                   !!     ask for /C
+        '                               !!   fi
+'                                       !! fi
+:QQ "E                                  !! if str Q empty
+        @^UQ%N%                         !!   str Q <- "N"
+'                                       !! fi
+0QQUQ                                   !! num Q <- str Q[0]
+QQ "V                                   !! if num Q lowercase
+        QQ-32UQ                         !!   force uppercase
+'                                       !! fi
+QQ-^^N "E                               !! if /C == "N"
+        :@^U9%A%                        !!   append "A" to str 9
+|                                       !! else
+        :@^U9%C%                        !!   append "C" to str 9
+        QQ-^^Y "E                       !!   if /C == "Y"
+                32@^UC%%                !!     str C <- <SP>
+                9:@^UC%%                !!     append TAB to str C
+        |                               !!   else
+                GQ                      !!     put /C in buffer
+                ^YXC                    !!     load to Q-reg C
+                ^YK                     !!     clean up
+        '                               !!   fi
+'                                       !! fi
+
+!! append entries for all other TECO commands to the mask in Q-reg 9
+
+!!   %"#$%&'()*+,-./0123456789:;<=>?%
+:@^U9%1..1..........................%
+
+!!   %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_%
+:@^U9%@....EF1.$...1$$.1.$.1..1..1.1^$%
+
+!!   %`abcdefghijklmnopqrstuvwxyz{|}~ %
+:@^U9%.LLLLLLLLLLLLLLLLLLLLLLLLLL....D%
+
+!! Load Q-register 8 with potential <delim> characters
+
+@^U8%/#*&\?()$!@%                       !! pre-load str 8
+1U8                                     !! num 8 <- 1
+126<                                    !! this loop appends ASCII chars
+        Q8:@^U8%% %8^[                   !! ^A to ~ to str 8
+   >
+
+!! Check for /W "Watch progress" switch
+
+@!+                                     !! does not make sense
+!! no need to test ET&512
+@^UW%%                                  !! clear str W
+J                                       !! go to beginning
+:@FS%/W%%"S                             !! if /W
+        MY                              !!   get arg
+|                                       !! else
+        QB "T                           !!   if any other switches
+                @^UQ%%                  !!     str Q <- "Y"
+        |                               !!   else
+                @I%Watch progress (Y/N) <N>? %
+                ^^QMR                   !!     ask for /W
+        '                               !!   fi
+'                                       !! fi
+0QQ "A                                  !! if /W is alphabetic
+        0QQ&95-^^Y "E                   !!   if is 'Y' or 'y'
+                @^UW/-1W/               !!     str W <- "-1W"
+        '                               !!   fi
+'                                       !! fi
++
+!! Check for /A "Automatic mode".
+
+@^UK%%                                  !! clear str K
+J                                       !! go to beginning
+:@FS%/A%%"S                             !! if /A
+        MY                              !!   get arg
+|                                       !! else
+        QB"T                            !!   if any other switches
+                @^UQ%Y%                 !!     str Q <- "Y"
+        |                               !!   else
+                @I/Automatic mode (Y for %, N, or set) <N>? /
+                ^^QMR                   !!     ask for /A
+        '                               !!   fi
+'                                       !! fi
+:QQ"N                                   !! if any /A val
+        0QQUQ                           !!   convert /A val to ASCII
+        QQ"V                            !!   if /A val lowercase
+                QQ-32UQ                 !!     to uppercase
+        '                               !!   fi
+        QQ-^^N"N                        !!   if /A not "N"
+                QQ-^^Y"E                !!     if /A == "Y"
+                        ^^%@^UK%%       !!       str K <- "%"
+                |                       !!     else (it's a set?)
+                        GQ              !!       put /A set in edit buf
+                        ^YXK            !!         load it into str K
+                        ^YK             !!       clean up
+                '                       !!     fi
+        '                               !!   fi
+'                                       !! fi
+
+!! Check for /E "Allow adjacent ESCapes" switch.
+
+0UH                                     !! num H <- FALSE
+J                                       !! jump to beginning of buffer
+:@FS%/E%%"S                             !! if "/E" found
+        ::@FS%:%%"S                     !!   if ":" found
+                0A@^UQ%%                !!     Q.str = arg
+                D                       !!     delete arg
+        |                               !!   else
+                @^UQ%Y%                 !!     Q.str = "Y"
+        '                               !!   fi
+|                                       !! else
+        QB"T                            !!   if any other switches
+                @^UQ%%                  !!     Q.str = ""
+        |                               !!   else
+                @I%Allow adjacent ESCapes (Y/N) <N>? %
+                ^^QMR                   !!     ask for /E value
+        '                               !!   fi
+'                                       !! fi
+0QQ"A                                   !! if /E val is alphabetic
+        0QQ&95-^^Y"E                    !!   if it's 'y' or 'Y'
+                -1UH                    !!     H.num = -1 (TRUE)
+        '                               !!   fi
+'                                       !! fi
+
+0,0XY                   !! clear get arg macro
+
+!! Load Q-register Z with the squisher macro
+
+
+^[^[
