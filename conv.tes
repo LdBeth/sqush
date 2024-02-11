@@ -1,0 +1,27 @@
+! teco macro to make Hatsune miku paint plot !
+0,128ET
+EO - 200 "L
+  @^A/Need TECO-64/ 13^T 10^T ^C '
+!! Error if no file name
+Z "E :@^A/File name with -T option/ ^C '
+^D                       !! Set decimal
+HXa @ER/^EQa/
+J @FS/.out/.mp/
+HXa @EW/^EQa/ HK         !! Setup input output
+Y                        !! yank file into buffer
+0,1:@FB/sat/ "U          !! Check SMT output
+  :@^A/Solver did not succeed/ ^C
+'
+0,. D 2C @S/"/ (.-3)Ua   !! Save position
+J                        !! Now, insert MetaPost header
+@I/input mikulib;
+beginfig(1);
+setup(/ Qa\ @I/);/
+Qa< L @I/doline(/ LR @I/);/ >
+L @I/drawback;
+endfig;
+end;
+/
+EX
+^[^[
+@!/this concludes the program./

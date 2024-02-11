@@ -1,5 +1,5 @@
 hk
-@i%SQU.TEC=SQU.TES/D:Y/B:Y/C+/ +/T:Y/E:Y/P/A:Y%
+@i%SQU.TEC=SQU.TES/D:Y/B:Y/C:+ :/T:Y/E:Y/P/A:Y%
 @ei/sqush.tes/
 mf
 :g9 10^T
@@ -13,36 +13,103 @@ ht 10^T
 hk
 
 :@^A/Test macro:/
-@i{
-! teco macro to make Hatsune miku paint plot !
-0,128ET
-EO - 200 "L
-  @^A/Need TECO-64/ 13^T 10^T ^C '
-!! Error if no file name
-Z "E :@^A/File name with -T option/ ^C '
-^D                       !! Set decimal
-HXa @ER/^EQa/
-J @FS/.out/.mp/
-HXa @EW/^EQa/ HK         !! Setup input output
-Y                        !! yank file into buffer
-0,1:@FB/sat/ "U          !! Check SMT output
-  :@^A/Solver did not succeed/ ^C
-'
-0,. D 2C @S/"/ (.-3)Ua   !! Save position
-J                        !! Now, insert MetaPost header
-@I/input mikulib;
-beginfig(1);
-setup(/ Qa\ @I/);/
-Qa< L @I/doline(/ LR @I/);/ >
-L @I/drawback;
-endfig;
-end;
-/
-EX
+@i[
+@^UR{
++0U.3                           !! num 3 <- Q-reg name on argument stack
+^YX.0                           !! str 0 <- last inserted string
+^YK                             !! kill display prompt
+Q.3&127 "R                      !! if Q-reg name in num 3 is alphanumeric
+.U.1                            !! num 1 <- current point
+ZJ                              !! go to end
+.U.2                            !! num 2 <- save buffer end pos
 
-^[^[
-@!/this concludes the program./
-12:@^Ur< 1 2 , 3 4 K >
-}
+!! build a mini-macro in Q-reg 1 which will put the user's response
+!! into the Q-reg we are using to return the user's response in.
+@I%Q2,.X%                       !! insert text to buffer
+Q.3&127@I%%                     !! insert Q-reg name
+Q.2,.X.1                        !! save the inserted macro
+Q.2,.K                          !! and clean up it
+
+!! display the prompt on a new, clean, line
+
+-1U.X <                         !! PROMPT:
+
+13^T10^T                        !! type <CR><LF>
+@!+                             !! ET does not work for TECO-64
+13^T                            !! type <CR>
+ET&512 "N                       !! if on scope terminal emit clear sequence
+        0,1ET                   !!   inhibit type-out conversions
+        27^T                    !!   type <ESC>
+        1,0ET                   !!   enable type-out conversions
+        0:W-4"E                 !!   if VT100 in ANSI mode
+                ^^[             !!     type [
+        '                       !!   fi
+        ^^J^T                   !!   type J
+|                               !! else (not on scope)
+        10^T                    !!   type <LF>
+'                               !! fi
++
+.-Q.2+(0^Q) "G                  !! if anything on current line
+        0T                      !!   type the line
+|                               !! else
+        :G.0                    !!   type str 0
+        Q.2,ZT                  !!   and input so far
+'                               !! fi
+
+!! Read characters from the console & insert them into the edit buffer.
+
+<                               !! GETCH:
+
+^TU.0                           !! read char to num 0
+Q.0-127 "E                      !! if char = <DEL>
+        Z-Q.2 "N                !!   if anything been inserted
+                -D              !!     backspace
+        '                       !!   fi
+        1;                      !!   go to PROMPT
+'                               !! fi
+Q.0-21 "E                       !! if char = ^U
+        Q.2,ZK                  !!   clear input line
+        1;                      !!   go to PROMPT
+'                               !! fi
+Q.0-18 "E                       !! if char = ^R
+        13^T 10^T               !!   type <CR> <LF>
+        :G.0                    !!   type prompt in str 0
+        Q.2,ZT                  !!   type current input
+        F<                      !!   go to GETCH
+'                               !! fi
+Q.0-26 "E                       !! if char = ^Z
+        Q.2,ZK                  !!   kill input
+        :%.0                    !! inc char so ^Z becomes <ESC>
+'                               !! fi
+Q.0-27 "E                       !! if char = <ESC>
+        13^T 10^T               !!   type <CR> <LF>
+        1U.X 1;                 !!   go to DONE
+'                               !! fi
+Q.3&128 "E                      !! if hi-bit of return Q-reg name is zero
+        Q.0-10 "E               !!   if char = <LF>
+                13^T            !!     display <CR>
+                1U.X 1;         !!     go to DONE
+        '                       !!   fi
+        Q.0-13 "E               !!   if char = <CR>
+                ^T^[             !!     absorb next char
+                1U.X 1;         !!     go to DONE
+        '                       !!   fi
+'                               !! fi
+Q.0@I%%                         !! insert input char to buffer
+>                               !! go to GETCH
+
+Q.X; >                          !! DONE:
+
+M.1                             !! run macro 1 to load Q-reg w/response
+Q.2,.K                          !! clean up input
+
+Q.1J                            !! restore to original buffer position
+
+|                               !! else (Q.3 not alphanumeric)
+        :@^A%?Invalid Q-register in INPLIN%
+'                               !! fi (Q.3&127 "R)
+}                               !! end of ^UR
+
+]
 j ma ht hk ex
 ^[^[
