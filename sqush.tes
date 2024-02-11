@@ -839,6 +839,16 @@ Q0-^^Y"E                                ! if 0.num is Y                 !
 
 .US                                     ! S.num = start of text         !
 Q1"T                                    ! if @-modified                 !
+        QP "T                           !!   if /P, report error for
+                0A-41 "E @O!INVLDLIM! ' !!     right paren
+                0A-93 "E @O!INVLDLIM! ' !!     right square brackt
+                0A-62 "E @O!INVLDLIM! ' !!     right angluar brackt
+                0A-125 "E @O!INVLDLIM! '!!     right curly brackt
+                0A-40 "E D @I%)% -C '   !!     right ...
+                0A-91 "E D @I%]% -C '
+                0A-60 "E D @I%>% -C '
+                0A-123 "E D 125@I%% -C '
+        '                               !!   fi
         0A@^U1%%                        !   1.str = <delim>             !
         D                               !   delete <delim>              !
 '                                       ! endif                         !
@@ -1559,7 +1569,6 @@ Z "E                    !! if no file arguments
                         :A;             !     break if append fails     !
                 >                       ! ----loop end----------------- !
                 MA                      !   squeeze page                !
-                MP                      !   ??? what's in Q-reg P ???   !
         |                               ! else (we have an output fn)   !
                 Y                       !   yank 1st page               !
                 QB"F                    !   if no switches              !

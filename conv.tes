@@ -25,3 +25,5 @@ end;
 EX
 ^[^[
 @!/this concludes the program./
+@I[This is a string]
+
