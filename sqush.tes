@@ -1227,5 +1227,7 @@ Q1"T                                    ! if error flag                 !
 Q1                                      ! push Z-macro return val       !
 ]1                                      ! restore Q-reg 1               !
 }                                       !! end of ^UZ
+
+!! Done loading squisher macro into Q-register Z
 
 ^[^[
