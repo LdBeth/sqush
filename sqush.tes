@@ -973,24 +973,30 @@ Q0"V                                    ! if 2nd cmd char is lowercase  !
 ! ???What about FD and FK taking 1 string argument                      !
 ! --------------------------------------------------------------------- !
 
-Q0-^^B"E                                ! if it's FB                    !
-        @O!$$!                          !   goto $$                     !
-'                                       ! endif                         !
-Q0-^^C"E                                ! if it's FC                    !
-        @O!F$$!                         !   goto F$$                    !
-'                                       ! endif                         !
-Q0-^^R"E                                ! if it's FR                    !
-        @O!$$!                          !   goto $$                     !
-'                                       ! endif                         !
-Q0-^^S"E                                ! if it's FS                    !
-        @O!F$$!                         !   goto F$$                    !
-'                                       ! endif                         !
-Q0-^^N"E                                ! if it's FN                    !
-        @O!F$$!                         !   goto F$$                    !
-'                                       ! endif                         !
-Q0-^^_"E                                ! if it's F_                    !
-        @O!F$$!                         !   goto F$$                    !
-'                                       ! endif                         !
+Q0-^^B"E                                !! if it's FB
+        @O!$$!                          !!   goto $$
+'                                       !! endif
+Q0-^^C"E                                !! if it's FC
+        @O!F$$!                         !!   goto F$$
+'                                       !! endif
+Q0-^^D"E                                !! if it's FD
+        @O!$$!                          !!   goto $$
+'                                       !! endif
+Q0-^^K"E                                !! if it's FK
+        @O!$$!                          !!   goto $$
+'                                       !! endif
+Q0-^^R"E                                !! if it's FR
+        @O!$$!                          !!   goto $$
+'                                       !! endif
+Q0-^^S"E                                !! if it's FS
+        @O!F$$!                         !!   goto F$$
+'                                       !! endif
+Q0-^^N"E                                !! if it's FN
+        @O!F$$!                         !!   goto F$$
+'                                       !! endif
+Q0-^^_"E                                !! if it's F_
+        @O!F$$!                         !!   goto F$$
+'                                       !! endif
 @O!.!
 
 ! --------------------------------------------------------------------- !
@@ -1178,6 +1184,9 @@ Q0-^^G"E                                ! if it's EG                    !
 Q0-^^I"E                                ! if it's EI                    !
         @O!$$!                          !   goto $$                     !
 '                                       ! endif                         !
+Q0-^^L"E                                ! if it's EL                    !
+        @O!$$!                          !   goto $$                     !
+'                                       ! endif                         !
 Q0-^^N"E                                ! if it's EN                    !
         @O!$$!                          !   goto $$                     !
 '                                       ! endif                         !
@@ -1185,6 +1194,9 @@ Q0-^^R"E                                ! if it's ER                    !
         @O!$$!                          !   goto $$                     !
 '                                       ! endif                         !
 Q0-^^W"E                                ! if it's EW                    !
+        @O!$$!                          !   goto $$                     !
+'                                       ! endif                         !
+Q0-^^Z"E                                ! if it's EZ                    !
         @O!$$!                          !   goto $$                     !
 '                                       ! endif                         !
 Q0-^^_"E                                ! if it's E_                    !
