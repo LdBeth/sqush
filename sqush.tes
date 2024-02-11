@@ -815,10 +815,10 @@ Q0-^^Y"E                                ! if 0.num is Y                 !
 27@^U1%%                                ! 1.str = ESC (default delim)   !
 .UC                                     ! C.num = current buf ptr       !
 
-! --------------------------------------------------------------------- !
-! $$, entry point for commands which take two string arguments (ie:     !
-! commands which contain two <delim>'s).                                !
-! --------------------------------------------------------------------- !
+!! ---------------------------------------------------------------------
+!! $$, entry point for two char commands take one string arguments (ie:
+!! F commands and E commands).
+!! ---------------------------------------------------------------------
 
 !$$!
 
