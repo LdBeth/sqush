@@ -16,6 +16,11 @@ EO - 200 "L
 !!   loop construct.
 !! * TECO-64 forbids interleaved loop exit such as < D .-Z; 0A"D > '.
 !! * /W switch is disabled.
+!! * /C switch is altered, now the syntax for special char set is:
+!!     /C?sepcial char set?
+!!   where the ? can be replace by any delim. The char set will
+!!   be appended to the default SP/TAB char set. Strpping of
+!!   alternative comment form would always happen.
 
 !! str 9: a mask containing labels we'll use in a goto.  Each
 !! character in the mask corresponds with a TECO command character
@@ -52,15 +57,19 @@ ET&128 "N                       !! if abort-on-error not set
 '                               !! fi
 0,128ET                         !! set abort-on-error
 J                               !! go to beginning
-< @FS%^ES%%; >                  !! remove white space in buffer
-J                               !! return beginning
 :@S%/%                          !! look for '/' switch
 UB                              !! -> num B
 QB "T                           !! if switches
+        R                       !!   back one char
         ET&64 "E                !!   if not detached
                 13 ^T 10 ^T     !!     type <CR><LF>
         '                       !!   fi
+|                               !! else
+        ZJ                      !!   go to pos end
 '                               !! fi
+0,.X.F                          !!   protect file names
+0,.K                            !!   leave only switches
+
 
 !! R get Response from user
 @^UR{
@@ -281,7 +290,7 @@ J                                       !! go to beginning
         :@FS%/B%% "S                    !!   if /B
                 MY                      !!     get arg
         |                               !!   else
-                QB"T                    !!     if any other switches
+                QB "T                   !!     if any other switches
                         @^UQ%%          !!        str Q <- ""
                 |                       !!     else
                         @I%Delete blank lines (Y/N) <N>? %
@@ -342,40 +351,36 @@ J                                       !! go to beginning
 @^UC%%                                  !! str C <- ""
 J                                       !! go to beginning
 :@FS%/C%% "S                            !! if /C
-        MY                              !!   get arg
+        0A@^UQ%%                        !!   save delim char
+        D .UQ                           !!   advance and save pos
+        :@FS%^EQQ%% "S                  !!   if search delim
+                QQ,.XQ                  !!     load set to str Q
+                QQ,.K                   !!     kill arg
+        |                               !!   else
+                :@^A"Incorrect syntax for /C"
+                @^UQ%%                  !!     clear str Q
+        '                               !!   fi
 |                                       !! else
         QB "T                           !!   if any other switches
                 @^UQ%%                  !!     str Q <- ""
         |                               !!   else
-                @I%Delete comments (Y for SP/TAB, N, or set) <N>? %
+                @I%Special comment delimters <SP/TAB>? %
                 ^^QMR                   !!     ask for /C
         '                               !!   fi
 '                                       !! fi
-:QQ "E                                  !! if str Q empty
-        @^UQ%N%                         !!   str Q <- "N"
-'                                       !! fi
-0QQUQ                                   !! num Q <- str Q[0]
-QQ "V                                   !! if num Q lowercase
-        QQ-32UQ                         !!   force uppercase
-'                                       !! fi
-QQ-^^N "E                               !! if /C == "N"
-        :@^U9%A%                        !!   append "A" to str 9
-|                                       !! else
-        :@^U9%C%                        !!   append "C" to str 9
-        QQ-^^Y "E                       !!   if /C == "Y"
-                32@^UC%%                !!     str C <- <SP>
-                9:@^UC%%                !!     append TAB to str C
-        |                               !!   else
-                GQ                      !!     put /C in buffer
-                ^YXC                    !!     load to Q-reg C
-                ^YK                     !!     clean up
-        '                               !!   fi
+:QQ "E                                  !! if /C empty
+        32@^UC%%                        !!   str C <- <SP>
+        9:@^UC%%                        !!   append TAB to str C
+        |                               !! else
+        GQ                              !!   put /C in buffer
+        ^YXC                            !!   load to Q-reg C
+        ^YK                             !!   clean up
 '                                       !! fi
 
 !! append entries for all other TECO commands to the mask in Q-reg 9
 
-!!   %"#$%&'()*+,-./0123456789:;<=>?%
-:@^U9%1..1..........................%
+!!   %!"#$%&'()*+,-./0123456789:;<=>?%
+:@^U9%C1..1..........................%
 
 !!   %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_%
 :@^U9%@....EF1.$...1$$.1.$.1..1..1.1^$%
@@ -469,6 +474,14 @@ J                                       !! jump to beginning of buffer
 '                                       !! fi
 
 0,0XY                   !! clear get arg macro
+
+Z "G                    !! if command switches are not consumed
+        :@^A%Command switches not fully consumed%
+ht
+:@^A/EOB/
+'                       !! fi
+HK                      !! clear buffer
+G.F                     !! retrive file names
 
 !! Load Q-register Z with the squisher macro
 
@@ -1076,17 +1089,22 @@ Q1"T                                    ! if @-modified                 !
 ! --------------------------------------------------------------------- !
 
 !C!
-
-::@S%^EGC%"U                            ! if not special comment delim  !
-        @O!A!                           !   handle like ^Astring^A      !
-'                                       ! endif                         !
-R                                       ! back up past special <delim>  !
-.UC                                     ! C.num = current buf ptr       !
-Q0@^U1%%                                ! 1.str = exclamation point     !
-Q1"T                                    ! if @-modified                 !
-        0A@^U1%%                        !   1.str = <delim>             !
-        D                               !   delete <delim>              !
-'                                       ! endif                         !
+::@S%!% "S                              !! if alternative comment
+        R                               !!   go to start of comment
+        .UC                             !!   num C <- point
+        10@^U1%%                        !!   search delim <- <LF>
+|                                       !! else (normal label)
+        ::@S%^EGC%"U                    !!   if not special label delim
+                @O!A!                   !!     handle like ^Astring^A
+        '                               !!   fi
+        R                               !!   back up past special delim
+        .UC                             !!   num C <- current point
+        Q0@^U1%%                        !!   str 1 <- exclamation mark
+        Q1"T                            !!   if @-modified
+                0A@^U1%%                !!     set search delim
+                D                       !!     delete delim
+        '                               !!   fi
+'                                       !! fi
 :@S%^EQ1%"U                             ! if search for <delim> failed  !
         @O!STRINGFAIL!                  !   unterminated string         !
 '                                       ! endif                         !
@@ -1366,5 +1384,16 @@ MZ"E                                    ! if squish macro returns OK    !
 }                                       !! end of ^UA
 
 !! Done loading squish driver macro into Q-register A
-
+
+!! If nothing is in the edit buffer, as them to input the name of the
+!! input file and insert it into the buffer.
+
+Z"E                                     ! if edit buffer is empty       !
+        @I%File <.TES or .TEC>? %       !   ask for input file          !
+        ^^QMR                           !   get response in Q.str       !
+        GQ                              !   and put it into the buffer  !
+'                                       ! endif                         !
+0,0XR                                   ! clear R.str (response macro)  !
+0,0XQ                                   ! clear Q.str (user responses)  !
+                                       !! End of ^UF
 ^[^[
