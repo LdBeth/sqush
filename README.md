@@ -12,10 +12,19 @@ To use with TECO-64, you need to rebuild it using `nstrict=1` to
 disable strict syntax check, there is currently a bug which
 prevents usage of GO TO inside macro level.
 
-Note that not all extensions of TECO-64 are covered, and original
-`squ.tes` also missed several F and E commands. Using this program at
-your own risks.
+Note that not all language extensions of TECO-64 are covered, and
+original `squ.tes` also missed several F and E commands. Using this
+program at your own risks.
+
+Using command
+```
+teco -T 'sqush.tec=sqush.tes/D:Y/B:Y/C:+:/T:Y/E:Y/P/A:Y' -E sqush.tes
+```
+
+to produce the squished macro from the source itself. It took about
+one minute to bootstrap so a copy of squished macro is included in repo.
 
 Happy TECO programming.
 
 *If you use Emacs, you can use my [emacs mode](https://github.com/LdBeth/InfernoEmacs/blob/master/core/teco-mode.el)*
+Actually I made this project to torture test the emacs mode I made.
