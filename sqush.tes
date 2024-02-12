@@ -362,7 +362,7 @@ J                                       !! go to beginning
                 ^^QMR                   !!     ask for /C
         '                               !!   fi
 '                                       !! fi
-32@^UC%%                                !! str C <- <SP>
+@^UC% %                                 !! str C <- <SP>
 9:@^UC%%                                !! append TAB to str C
 GQ                                      !! put /C in buffer
 ^Y:XC                                   !! load to Q-reg C
@@ -383,17 +383,12 @@ GQ                                      !! put /C in buffer
 
 !! Load Q-register 8 with potential <delim> characters
 
-@^U8%/#+*&\?$!@"'=|~%           !! frequently used char
-37:@^U8%%                       !! append '%'
+@^U8%/#*&\?()$!@%               !! frequently used char
 1U8                             !! num 8 <- 1
-31<                             !! appends non printable ASCII chars
-        Q8:@^U8%% %8^[           !! ^A to ^_ to str 8
+126<                            !! appends all ASCII chars
+        Q8:@^U8%% %8^[
 >
-44U8
-16<                             !! skip space
-        Q8:@^U8%% %8^[           !! , to ;
->
-0UP                             !!     num P <- FALSE
+0UP                             !! num P <- FALSE
 J                               !! go to beginning
 :@FS%/P%% "S                    !! if /P
         MY                      !!   get arg
@@ -408,19 +403,15 @@ J                               !! go to beginning
 0QQ "A                          !! if /P is alphabetic
         0QQ&95-^^Y "E           !!   if 'y' or 'Y'
                 -1UP            !!     num P <- TRUE
-                :@^U8%)>]%      !!     only search right pair
-        |                       !!   else (is traditional)
-                :@^U8%()<>[]%   !!     can use all ASCII
+                @^UP%(<[{%      !!     str P <- left parenthese chars
+                ZJ .U8          !!     go to end of buffer and save
+                G8 Q8J          !!     unpack str 8 and go to start
+                < @FS%^EGP%%; > !!     remove left parens
+                Q8,ZX8          !!     reload str 8
+                Q8,ZK           !!     clean up
+                @^UP%}]>)%      !!     set to opposite parens
         '                       !!   fi
 '                               !! fi
-65U8
-26<                             !! append A - Z
-        Q8:@^U8%% %8^[
->
-94U8
-29<                             !! append ^ - z
-        Q8:@^U8%% %8^[
->
 
 !! Check for /W "Watch progress" switch
 
@@ -707,11 +698,8 @@ Q1"T                                    ! if @-modified                 !
 .US                                     ! S.num = current buf ptr       !
 Q1"T                                    !! if @-modifed
         QP "T                           !!   if /P, report error for
-                0A-^^) "E @O!INVLDLIM! ' !!     right paren
-                0A-^^] "E @O!INVLDLIM! ' !!     right square brackt
-                0A-^^> "E @O!INVLDLIM! ' !!     right angluar brackt
-                0A-125 "E @O!INVLDLIM! ' !!     right curly brackt
-                0A-^^( "E D @I%)% -C '   !!     right ...
+                ::@S%^EGP% "S @O!INVLDLIM! ' !! right paren
+                0A-^^( "E D @I%)% -C '  !!      convert left parens
                 0A-^^[ "E D @I%]% -C '
                 0A-^^< "E D @I%>% -C '
                 0A-^^{ "E D 125@I%% -C '
