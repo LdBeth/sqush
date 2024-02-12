@@ -1161,8 +1161,7 @@ Q1"T                                    ! if @-modified                 !
 ! --------------------------------------------------------------------- !
 
 !C!
-::@S%!% "S                              !! if alternative comment
-        R                               !!   go to start of comment
+0A-^^! "E                               !! if alternative comment
         .UC                             !!   num C <- point
         10@^U1%%                        !!   search delim <- <LF>
 |                                       !! else (normal label)
@@ -1278,7 +1277,7 @@ Q1"T                                    ! if error flag                 !
         @O!SETPOS!
 
 !INVLDLIM!
-        @^U1%Invalid Delimter%
+        @^U1%Invalid delimter%
         @O!SETPOS!
 
 !STRINGFAIL!
