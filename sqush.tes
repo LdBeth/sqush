@@ -208,73 +208,65 @@ J                               !! go to beginning
 
 !! Check for /L "Set line lengths" switch.
 
-<                                       !! BADNUM: re-ask if :nn bad
-0UO                                     !! clear num O
-J                                       !!   go to beginning
-:Q9 "N                                  !! if /D:Y set
-        :@FS%/L%% "S                    !!   and if /L, delete it
+<                               !! BADNUM: re-ask if :nn bad
+0UO                             !! clear num O
+J                               !!   go to beginning
+:@FS%/L%% "S                    !! if /L
+        ::@FS%:%% "S            !!   if :arg
+                0A@^UQ%%        !!     str Q <- arg
+                0A "D           !!     if arg is numberic
+                        < D .-Z; 0A "D 0A:@^UQ%% | 1; ' > !! get nn
+                |               !!     else
+                        D       !!       delete arg
+                '               !!     fi
+        |                       !!   else (no :arg)
+                @^UQ%Y%         !!     str Q <- "Y"
+        '                       !!   fi
+        :Q9 "N                  !!   if /D:Y set
                 :@^A"%/L specified with /D, /L ignored"
-                ::@FS%:%% "S            !!     if :arg
-                        0A "D           !!       if arg is numberic
-                                < D .-Z; 0A "D | 1; ' > !! delete nn
-                        |               !!       else
-                                D       !!         delete arg
-                        '               !!       fi
-                '                       !!     fi
-        '                               !!   fi
-|                                       !! else (no D:Y)
-        :@FS%/L%% "S                    !!   if /L
-                ::@FS%:%% "S            !!     if :arg
-                        0A@^UQ%%        !!       str Q <- arg
-                        0A "D           !!       if arg is numberic
-                                < D .-Z; 0A "D 0A:@^UQ%% | 1; ' > !! get nn
-                        |               !!       else
-                                D       !!         delete arg
-                        '               !!       fi
-                |                       !!     else (no :arg)
-                        @^UQ%Y%         !!       str Q <- "Y"
-                '                       !!     fi
-        |                               !!   else (no /L)
-                QB "T                   !!     if other switches
-                        @^UQ%%          !!       str Q <- ""
-                |                       !!     else
-                        @I%Set line lengths (Y for 70, N, or length) <N>? %
-                        ^^QMR           !!       ask for /L
-                '                       !!     fi
-        '                               !!   fi
-        0QQ "A                          !!   if /L is alphabetic
-                0QQ&95-^^Y "E           !!     if is 'y' or 'Y'
-                        !! load 9.str with labels for control chars,
-                        !! with <LF>, <CR>, and <SP> marked as O.
-                        !!
-                        !!  %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ %
-                        @^U9%DA.......TO..O.......U....Z...V.O%
-                        70UD            !!       set line length to 70
-                '                       !!     fi
-        '                               !!   fi
-        0QQ "D                          !!   if /L is numberic
-                .UQ                     !!     save current pos
-                ZJ                      !!     go to pos end
-                GQ                      !!     put /L str in buffer
-                ^SC                     !!     go to /L str begin
-                \UO                     !!     put str in num O
-                ^SD                     !!     clean up
-                .-Z "N                  !!     if anything left over
-                        ZK              !!       kill them
-                        QQJ             !!       restore pos
-                        F<              !!       go to BADNUM
-                '                       !!     fi
-                QQJ                     !!     restore pos
-                QO "E                   !!     if /L is 0
-                        F<              !!       go to BADNUM
-                '                       !!     fi
-                !! load str 9 with labels for control chars, with <LF>,
-                !! <CR>, and <SP> marked as O.
+                1;              !!     go to EXIT
+        '                       !!   fi
+|                               !! else (no /L)
+        QB "T                   !!   if other switches
+                @^UQ%%          !!     str Q <- ""
+        |                       !!   else
+                @I%Set line lengths (Y for 70, N, or length) <N>? %
+                ^^QMR           !!     ask for /L
+        '                       !!   fi
+'                               !! fi
+0QQ "A                          !! if /L is alphabetic
+        0QQ&95-^^Y "E           !!   if is 'y' or 'Y'
+                !! load 9.str with labels for control chars,
+                !! with <LF>, <CR>, and <SP> marked as O.
                 !!
                 !!  %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ %
                 @^U9%DA.......TO..O.......U....Z...V.O%
-        '                               !!   fi
-' 1; >                                  !! fi
+                70UD            !!     set line length to 70
+        '                       !!   fi
+'                               !! fi
+0QQ "D                          !! if /L is numberic
+        .UQ                     !!   save current pos
+        ZJ                      !!   go to pos end
+        GQ                      !!   put /L str in buffer
+        ^SC                     !!   go to /L str begin
+        \UO                     !!   put str in num O
+        ^SD                     !!   clean up
+        .-Z "N                  !!   if anything left over
+                ZK              !!     kill them
+                QQJ             !!     restore pos
+                F<              !!     go to BADNUM
+        '                       !!   fi
+        QQJ                     !!   restore pos
+        QO "E                   !!   if /L is 0
+                F<              !!     go to BADNUM
+        '                       !!   fi
+        !! load str 9 with labels for control chars, with <LF>,
+        !! <CR>, and <SP> marked as O.
+        !!
+        !!  %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ %
+        @^U9%DA.......TO..O.......U....Z...V.O%
+'                               !!   fi
+1; >                            !! EXIT:
 
 !! Check for /B "Delete blank lines" switch
 
@@ -370,14 +362,11 @@ J                                       !! go to beginning
                 ^^QMR                   !!     ask for /C
         '                               !!   fi
 '                                       !! fi
-:QQ "E                                  !! if /C empty
-        32@^UC%%                        !!   str C <- <SP>
-        9:@^UC%%                        !!   append TAB to str C
-        |                               !! else
-        GQ                              !!   put /C in buffer
-        ^YXC                            !!   load to Q-reg C
-        ^YK                             !!   clean up
-'                                       !! fi
+32@^UC%%                                !! str C <- <SP>
+9:@^UC%%                                !! append TAB to str C
+GQ                                      !! put /C in buffer
+^Y:XC                                   !! load to Q-reg C
+^YK                                     !! clean up
 
 !! append entries for all other TECO commands to the mask in Q-reg 9
 
@@ -536,7 +525,6 @@ G.F                     !! retrive file names
 !! ---------------------------------------------------------------------
 
 <
-!..!
 @!+                                     !! /W disabled
 MW                                      ! refresh scope                 !
 +
@@ -593,7 +581,7 @@ QH"F                                    ! if no adjacent ESC's          !
                 0A-27"E                 !     if next char is ESC       !
                         @I%^[%           !       insert a single ESC     !
                         C               !       skip past next ESC      !
-                        @O!..!          !       jump to main loop       !
+                        F<              !       jump to main loop       !
                 '                       !     endif                     !
                 ! ----------------------------------------------------- !
                 ! at this point we are trying to insert an ESC; but we  !
@@ -641,7 +629,7 @@ Q0@I%%                                  ! insert ^char                  !
 -1^Q+2"E                                ! if only 2 chars on this line  !
         -2D                             !   delete <CR><LF>             !
 '                                       ! endif                         !
-@O!..!                                  ! jump to main loop             !
+F<                                      ! jump to main loop             !
 
 ! --------------------------------------------------------------------- !
 ! handle 'O'.  we've run into <LF>, <CR>, or <LF> with the /L switch    !
@@ -661,7 +649,7 @@ Q0@I%%                                  ! insert ^char                  !
                                 Q0-13"E !         if curr char is <CR>  !
                                         -2D !       delete <CR><CR>     !
                                 |       !         else                  !
-                                        @O!..! !    jump to main loop   !
+                                        F<  !       jump to main loop   !
                                 '       !         endif                 !
                         '               !       endif                   !
                 '                       !     endif                     !
@@ -678,7 +666,7 @@ Q0@I%%                                  ! insert ^char                  !
                 10@I%%                  !   insert <LF>                 !
         '                               !   endif                       !
 '                                       ! endif                         !
-@O!..!                                  ! jump to main loop             !
+F<                                      ! jump to main loop             !
 
 ! --------------------------------------------------------------------- !
 ! handle 'U'.  we've run into ^Uq.  usually, the string ^Uq is loading  !
@@ -719,14 +707,14 @@ Q1"T                                    ! if @-modified                 !
 .US                                     ! S.num = current buf ptr       !
 Q1"T                                    !! if @-modifed
         QP "T                           !!   if /P, report error for
-                0A-41 "E @O!INVLDLIM! ' !!     right paren
-                0A-93 "E @O!INVLDLIM! ' !!     right square brackt
-                0A-62 "E @O!INVLDLIM! ' !!     right angluar brackt
-                0A-125 "E @O!INVLDLIM! '!!     right curly brackt
-                0A-40 "E D @I%)% -C '   !!     right ...
-                0A-91 "E D @I%]% -C '
-                0A-60 "E D @I%>% -C '
-                0A-123 "E D 125@I%% -C '
+                0A-^^) "E @O!INVLDLIM! ' !!     right paren
+                0A-^^] "E @O!INVLDLIM! ' !!     right square brackt
+                0A-^^> "E @O!INVLDLIM! ' !!     right angluar brackt
+                0A-125 "E @O!INVLDLIM! ' !!     right curly brackt
+                0A-^^( "E D @I%)% -C '   !!     right ...
+                0A-^^[ "E D @I%]% -C '
+                0A-^^< "E D @I%>% -C '
+                0A-^^{ "E D 125@I%% -C '
         '                               !!   fi
         0A@^U1%%                        !!   1.str = <delim>
         D                               !!   delete <delim>
@@ -911,10 +899,10 @@ QT-QS"G                                 ! if string is not-empty        !
                 QSJ                     !     jump to start of string   !
                 Q0@I%%                  !     insert <delim>            !
                 QP "T                   !!    if /P
-                        -1A-41 "E -D @I%(% ' !! replace pair delimiters
-                        -1A-93 "E -D @I%[% '
-                        -1A-62 "E -D @I%<% '
-                        -1A-125 "E -D 123@I%% '
+                        -1A-^^) "E -D @I%(% ' !! replace pair delimiters
+                        -1A-^^] "E -D @I%[% '
+                        -1A-^^> "E -D @I%<% '
+                        -1A-125 "E -D @I%{% '
                 '                       !!    fi
                 QC-1J                   !     jump before command       !
                 @I%@%                   !     insert @                  !
@@ -925,7 +913,7 @@ QT-QS"G                                 ! if string is not-empty        !
 QTJ                                     ! jump to end of string         !
 Q0@I%%                                  ! insert <delim>                !
 0U1                                     ! clear @-modified flag         !
-@O!..!                                  ! jump to main loop             !
+F<                                      ! jump to main loop             !
 
 ! --------------------------------------------------------------------- !
 ! handle '1'.  we've run into ", %, G, M, Q, U, X, [, or ].  For ", the !
@@ -1130,14 +1118,13 @@ Q0@I%%                                  ! insert <delim>                !
 QU-QTC                                  ! advance to end of text2       !
 Q0@I%%                                  ! insert <delim>                !
 0U1                                     ! clear @-modified flag         !
-@O!..!                                  ! jump to main loop             !
+F<                                      ! jump to main loop             !
 
-! --------------------------------------------------------------------- !
-! handle 'A'.  we've run into ^Atext^A or @^A/text/.  This is also the  !
-! entry point for the 'C' routine:  if we're not deleting the comment   !
-! we handle <exclamation-point>comment<exclamation-point> just like     !
-! ^Atest^A.                                                             !
-! --------------------------------------------------------------------- !
+!! ---------------------------------------------------------------------
+!! handle 'A'.  we've run into ^Atext^A or @^A/text/.  This is also the
+!! entry point for the 'C' routine:  if we're not deleting the comment
+!! we handle !commen! just like ^Atest^A.
+!! ---------------------------------------------------------------------
 
 !A!
 
@@ -1181,7 +1168,7 @@ Q1"T                                    ! if @-modified                 !
 '                                       ! endif                         !
 QC-1,.K                                 ! kill entire comment           !
 0U1                                     ! clear @-modified flag         !
-@O!..!                                  ! jump to main loop             !
+F<                                      ! jump to main loop             !
 
 ! --------------------------------------------------------------------- !
 ! handle 'E'.  we've run into an E command.                             !
@@ -1242,7 +1229,7 @@ Q0-^^_"E                                ! if it's E_                    !
 
 -D                                      ! delete <CTRL>-Z               !
 @I%^Z%                                  ! insert <CARET>-Z              !
-@O!..!                                  ! jump to main loop             !
+F<                                      ! jump to main loop             !
 
 >                                       ! main loop end---------------- !
 
@@ -1480,7 +1467,6 @@ Z"E                                     ! if edit buffer is empty       !
 
 !! START HERE
 
-!! @EI%%   !! Close current input command
 MF      !! execute initialization
 0,0XF   !! clear macro F
 
@@ -1607,5 +1593,5 @@ Z "E                    !! if no file arguments
                 EF                      !   close output file           !
                 EX                      !   exit                        !
         '                               !   endif                       !
-'                       !! fi
+'                                       !! fi
 ^[^[
