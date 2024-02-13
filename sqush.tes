@@ -125,11 +125,11 @@ Q.0-127 "E                      !! if char = <DEL>
         Z-Q.2 "N                !!   if anything been inserted
                 -D              !!     backspace
         '                       !!   fi
-        1;                      !!   go to PROMPT
+        0;                      !!   go to PROMPT
 '                               !! fi
 Q.0-21 "E                       !! if char = ^U
         Q.2,ZK                  !!   clear input line
-        1;                      !!   go to PROMPT
+        0;                      !!   go to PROMPT
 '                               !! fi
 Q.0-18 "E                       !! if char = ^R
         13^T 10^T               !!   type <CR> <LF>
@@ -143,16 +143,16 @@ Q.0-26 "E                       !! if char = ^Z
 '                               !! fi
 Q.0-27 "E                       !! if char = <ESC>
         13^T 10^T               !!   type <CR> <LF>
-        1U.X 1;                 !!   go to DONE
+        1U.X 0;                 !!   go to DONE
 '                               !! fi
 Q.3&128 "E                      !! if hi-bit of return Q-reg name is zero
         Q.0-10 "E               !!   if char = <LF>
                 13^T            !!     display <CR>
-                1U.X 1;         !!     go to DONE
+                1U.X 0;         !!     go to DONE
         '                       !!   fi
         Q.0-13 "E               !!   if char = <CR>
                 ^T^[             !!     absorb next char
-                1U.X 1;         !!     go to DONE
+                1U.X 0;         !!     go to DONE
         '                       !!   fi
 '                               !! fi
 Q.0@I%%                         !! insert input char to buffer
@@ -215,7 +215,7 @@ J                               !!   go to beginning
         ::@FS%:%% "S            !!   if :arg
                 0A@^UQ%%        !!     str Q <- arg
                 0A "D           !!     if arg is numberic
-                        < D .-Z; 0A "D 0A:@^UQ%% | 1; ' > !! get nn
+                        < D .-Z; 0A "D 0A:@^UQ%% | 0; ' > !! get nn
                 |               !!     else
                         D       !!       delete arg
                 '               !!     fi
@@ -224,7 +224,7 @@ J                               !!   go to beginning
         '                       !!   fi
         :Q9 "N                  !!   if /D:Y set
                 :@^A"%/L specified with /D, /L ignored"
-                1;              !!     go to EXIT
+                0;              !!     go to EXIT
         '                       !!   fi
 |                               !! else (no /L)
         QB "T                   !!   if other switches
@@ -266,7 +266,7 @@ J                               !!   go to beginning
         !!  %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ %
         @^U9%DA.......TO..O.......U....Z...V.O%
 '                               !!   fi
-1; >                            !! EXIT:
+0; >                            !! EXIT:
 
 !! Check for /B "Delete blank lines" switch
 
@@ -817,7 +817,7 @@ Q0-^^Y"E                                ! if 0.num is Y                 !
 Q1"T                                    ! if @-modified                 !
         QP "T                           !!   if /P, report error for
                 ::@S%^EGP% "S @O!INVLDLIM! ' !! right curly brackt
-                0A-^^( "E D @I%)% -C '  !!      right ...
+                0A-^^( "E D @I%)% -C '    !!      right ...
                 0A-^^[ "E D @I%]% -C '
                 0A-^^< "E D @I%>% -C '
                 0A-^^{ "E D 125@I%% -C '
@@ -869,7 +869,7 @@ QT-QS"G                                 ! if string is not-empty        !
                 ! in the string.                                        !
                 ! ----------------------------------------------------- !
                 G8                      !     put 8.str into buf        !
-                ^Y:X1                   !     put 8.str into 1.str      !
+                ^YX1                    !     put 8.str into 1.str      !
                 ^YK                     !     kill 8.str from buf       !
                 0U0                     !     clear 0.num               !
                 <                       ! ----loop begin--------------- !
@@ -1022,34 +1022,35 @@ Q0-^^_"E                                !! if it's F_
 ! if S.num <> T.num & T.num <> U.num, then we have: FStext1$text2       !
 ! --------------------------------------------------------------------- !
 
+!! For TECO-64 the paired delmiter syntax is
+!! @FS[text1][text2]
+
 !F$$!
 
 .US                                     ! S.num = start of text1        !
 27@^U1%%                                ! 1.str = ESC (default delim)   !
-QP "T                                   !! if /P
-        < Q1:; F| >                     !!   if not modified go to else
-        ::@S%^EGP% "S @O!INVLDLIM! '    !!   check invalid delim
-        0A-^^( "E D @I%)% -C '
-        0A-^^[ "E D @I%]% -C '
-        0A-^^< "E D @I%>% -C '
-        0A-^^{ "E D 125@I%% -C '
-        !! TODO
-        F|
-|                                       !! else
-Q1"T                            !!   if @-modified
-        0A@^U1%%                !!     1.str = <delim>
+Q1"T                                    !! if @-modified
+        QP "T                           !!   if /P
+                ::@S%^EGP% "S @O!INVLDLIM! ' !! check invalid delim
+                0A-^^( "E D @^U1%)(% |  !!     setup delim in between
+                0A-^^[ "E D @^U1%][% |
+                0A-^^< "E D @^U1%><% |
+                0A-^^{ "E D 125@^U1%% :@^U1%{% |
+                0A@^U1%% D ' ' ' '
+        |                               !!   else
+                0A@^U1%%                !!     1.str = <delim>
                 D                       !!     delete <delim>
-        '                               !!   endif
-        :@S%^EQ1%"U                     !!   if search for 1st delim fails
-                @O!STRINGFAIL!          !!     unterminated string
         '                               !!   fi
-        -D                              !!   delete 1st <delim>
-        .UT                             !!   T.num = start of text2
-        :@S%^EQ1%"U                     !!   if search for 2nd delim fails
-                @O!STRINGFAIL!          !!     unterminated string
-        '                               !!   fi
-        -D                              !!   delete 2nd <delim>
 '                                       !! fi
+:@S%^EQ1%"U                             !! if search for 1st delim fails
+        @O!STRINGFAIL!                  !!   unterminated string
+'                                       !! fi
+-D                                      !! delete 1st <delim>
+.UT                                     !! T.num = start of text2
+:@S%^EQ1%"U                             !! if search for 2nd delim fails
+        @O!STRINGFAIL!                  !!   unterminated string
+'                                       !! fi
+-D                                      !! delete 2nd <delim>
 .UU                                     ! U.num = end of text2          !
 QH"T                                    ! if allow adjacent escapes     !
         27U0                            !   0.num = ESC                 !
