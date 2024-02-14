@@ -674,17 +674,16 @@ F<                                      ! jump to main loop             !
 
 27@^U1%%                                ! 1.str = ESC (default delim)   !
 .UC                                     ! C.num = current buf ptr       !
-0AU0                                    ! 0.num = ^U Q-reg name         !
-C                                       ! advance past Q-reg name       !
-Q0-^^."E                                ! if it's .q (local Q-reg name) !
-        0AU0                            !   0.num = "real" Q-reg name   !
+0A-^^."E                                ! if it's .q (local Q-reg name) !
         C                               !   advance past "."            !
 '                                       ! endif                         !
-Q0"V                                    ! if Q-reg name is lowercase    !
-        Q0-32U0                         !   convert it to uppercase     !
-        -D                              !   delete lowercase char       !
-        Q0@I%%                          !   insert uppercase char       !
-'                                       ! endif                         !
+0A"V                                    !! if Q-reg name is lowercase
+        0A-32U0                         !!   convert it to uppercase
+        D                               !!   delete lowercase char
+        Q0@I%%                          !!   insert uppercase char
+|                                       !! else
+C                                       !! advance past Q-reg name
+'                                       !! fi
 !! Take shortcut if text argument is empty
 Q1"T                                    ! if @-modified                 !
         0A-(1A)"E                       !   if @^Uq<delim><delim>       !
@@ -971,10 +970,8 @@ Q0"V                                    ! if 2nd cmd char is lowercase  !
 '                                       ! endif                         !
 
 ! --------------------------------------------------------------------- !
-! the FB and FR commands take a single string argument, goto $$         !
+! the FB, FD, FR, FK commands take a single string argument, goto $$    !
 ! the FC, FS, FN, and F_ commands take two string arguments, goto F$$   !
-!                                                                       !
-! ???What about FD and FK taking 1 string argument                      !
 ! --------------------------------------------------------------------- !
 
 Q0-^^B"E                                !! if it's FB
@@ -1201,11 +1198,10 @@ Q0"V                                    ! if 2nd cmd char is lowercase  !
         Q0@I%%                          !   insert uppercase char       !
 '                                       ! endif                         !
 
-! --------------------------------------------------------------------- !
-! the EB, EG, EI, EN, ER, EW, E_ commands take a string argument, they  !
-! have to be passed to the $$ routine.                                  !
-! ???What about EL, EQq, EZ, and E%q taking a string argument           !
-! --------------------------------------------------------------------- !
+!! ---------------------------------------------------------------------
+!! the EB, EG, EI, EL, EN, ER, EW, EZ, E_ commands take a string argument,
+!! they have to be passed to the $$ routine.
+!! ---------------------------------------------------------------------
 
 Q0-^^B"E                                ! if it's EB                    !
         @O!$$!                          !   goto $$                     !
@@ -1222,6 +1218,9 @@ Q0-^^L"E                                ! if it's EL                    !
 Q0-^^N"E                                ! if it's EN                    !
         @O!$$!                          !   goto $$                     !
 '                                       ! endif                         !
+Q0-^^Q"E                                ! if it's EQ                    !
+        @O!E1!                          !   goto E1                     !
+'                                       ! endif                         !
 Q0-^^R"E                                ! if it's ER                    !
         @O!$$!                          !   goto $$                     !
 '                                       ! endif                         !
@@ -1234,7 +1233,26 @@ Q0-^^Z"E                                ! if it's EZ                    !
 Q0-^^_"E                                ! if it's E_                    !
         @O!$$!                          !   goto $$                     !
 '                                       ! endif                         !
+Q0-^^%"E                                ! if it's E%                    !
+        @O!E1!                          !   goto E1                     !
+'                                       ! endif                         !
 @O!.!
+
+!! Handle EQq, E%q that takes one string argument.
+
+!E1!
+
+0A-^^."E                                !! if it's .q (local Q-reg name)
+        C                               !!   advance past "."
+'                                       !! fi
+0A"V                                    !! if Q-reg name is lowercase
+        0A-32U0                         !!   convert it to uppercase
+        D                               !!   delete lowercase char
+        Q0@I%%                          !!   insert uppercase char
+|                                       !! else
+C                                       !! advance past Q-reg name
+'                                       !! fi
+@O!$$!
 
 ! --------------------------------------------------------------------- !
 ! handle 'Z'.  we've run into a ^Z, replace it with <CARET>-Z           !
