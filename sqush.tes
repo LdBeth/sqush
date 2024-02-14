@@ -1046,6 +1046,12 @@ Q1"T                                    !! if @-modified
         @O!STRINGFAIL!                  !!   unterminated string
 '                                       !! fi
 -D                                      !! delete 1st <delim>
+QP "T                                   !! if /P
+        :Q1-2 "E                        !!   if used pair delim
+        -D                              !!     delete again
+        0Q1@^U1%%                       !!     str 1 <- first of str 1
+        '                               !!   fi
+'                                       !! fi
 .UT                                     !! T.num = start of text2
 :@S%^EQ1%"U                             !! if search for 2nd delim fails
         @O!STRINGFAIL!                  !!   unterminated string
@@ -1084,7 +1090,7 @@ QH"T                                    ! if allow adjacent escapes     !
 ! --------------------------------------------------------------------- !
 
 G8                                      ! put 8.str into buf            !
-^Y:X1                                   ! put 8.str into 1.str          !
+^YX1                                    ! put 8.str into 1.str          !
 ^YK                                     ! kill 8.str from buf           !
 0U0                                     ! 0.num = 0                     !
 <                                       ! loop begin------------------- !
@@ -1103,6 +1109,12 @@ G8                                      ! put 8.str into buf            !
 Q0Q1U0                                  ! 0.num = Q0th char of Q1       !
 QSJ                                     ! jump to start of text1        !
 Q0@I%%                                  ! insert <delim>                !
+QP "T                                   !! if /P
+        -1A-^^) "E -D @I%(% '           !!   replace pair delimiters
+        -1A-^^] "E -D @I%[% '
+        -1A-^^> "E -D @I%<% '
+        -1A-125 "E -D @I%{% '
+'                                       !! fi
 QC-1J                                   ! jump 1 char before F command  !
 @I%@%                                   ! insert @                      !
 2%T^[                                    ! T.num (end of text1) += 2     !
@@ -1112,6 +1124,12 @@ QC-1J                                   ! jump 1 char before F command  !
 
 QTJ                                     ! jump to end of text1          !
 Q0@I%%                                  ! insert <delim>                !
+QP "T                                   !! if /P
+        -1A-^^) "E @I%(% '              !!   replace pair delimiters
+        -1A-^^] "E @I%[% '
+        -1A-^^> "E @I%<% '
+        -1A-125 "E @I%{% '
+'                                       !! fi
 QU-QTC                                  ! advance to end of text2       !
 Q0@I%%                                  ! insert <delim>                !
 0U1                                     ! clear @-modified flag         !
