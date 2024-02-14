@@ -28,3 +28,13 @@ Happy TECO programming.
 
 *If you use Emacs, you can use my [emacs mode](https://github.com/LdBeth/InfernoEmacs/blob/master/core/teco-mode.el)*
 Actually I made this project to torture test the emacs mode I made.
+
+## TECO-64 specific language features that are not (yet) supported
+
+* TECO-64 automatically skips ascii space charachter when look for
+  delimiters for `@` modified commands. This macro does not yet do
+  that, so spaces before delimiter are not allowed.
+
+* TECO-64 supports using `!` as operator in arithmetic expression
+  enclosed between `()`.
+
