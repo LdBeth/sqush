@@ -557,6 +557,87 @@ Q0@I%%                                  ! insert uppercase char         !
 @O!DISP!                                ! try label for uppercase char  !
 
 ! --------------------------------------------------------------------- !
+! handle '@'.  the following command is @ modified, set a flag in 1.num !
+! so we know to look for the alternate delimiter characters.            !
+!                                                                       !
+! even though <delim> characters will be specified along with the '@'   !
+! command, we'll try to use ESC whenever possible and convert the @     !
+! modified command back into a "normally" delimited command.            !
+! --------------------------------------------------------------------- !
+
+!@!
+
+-1U1                                    ! set @-modified flag           !
+! ...fall through ... !
+
+! --------------------------------------------------------------------- !
+! handle 'D'.  delete the character from the output file                !
+! --------------------------------------------------------------------- !
+
+!D!
+
+-D                                      ! delete last character         !
+@O!.!
+
+! --------------------------------------------------------------------- !
+! handle '1'.  we've run into ", %, G, M, Q, U, X, [, or ].  For ", the !
+! next character is a conditional execution command.  For everything    !
+! else, the next character is a Q-register name.  In either case, if    !
+! the next char is lowercase, we uppercase it; otherwise, we fall       !
+! through to the 'V' code below which simply advances past the char.    !
+! --------------------------------------------------------------------- !
+
+!1!
+
+0A-^^."E                                ! if it's .q (local Q-reg name) !
+        C                               !   advance past "."            !
+'                                       ! endif                         !
+0A"V                                    ! if lowercase                  !
+        0A-32U0                         !   convert to uppercase        !
+        D                               !   delete lowercase char       !
+        Q0@I%%                          !   insert uppercase char       !
+        @O!.!                           !   goto .                      !
+'                                       ! endif                         !
+! ... fall through ...!
+
+! --------------------------------------------------------------------- !
+! handle 'V'.  we've run into <CTRL>-^, simply skip it                  !
+! --------------------------------------------------------------------- !
+
+!V!
+
+C                                       ! simply advance past it        !
+@O!.!                                   ! goto .                        !
+
+! --------------------------------------------------------------------- !
+! handle 'C'.  we've run into an exclamation point with the /C switch   !
+! set.  Q-register C contains the special comment delimiter characters. !
+! --------------------------------------------------------------------- !
+
+!C!
+0A-^^! "E                               !! if alternative comment
+        .UC                             !!   num C <- point
+        10@^U1%%                        !!   search delim <- <LF>
+|                                       !! else (normal label)
+        ::@S%^EGC%"U                    !!   if not special label delim
+                @O!A!                   !!     handle like ^Astring^A
+        '                               !!   fi
+        R                               !!   back up past special delim
+        .UC                             !!   num C <- current point
+        Q0@^U1%%                        !!   str 1 <- exclamation mark
+        Q1"T                            !!   if @-modified
+                0A@^U1%%                !!     set search delim
+                D                       !!     delete delim
+        '                               !!   fi
+'                                       !! fi
+:@S%^EQ1%"U                             ! if search for <delim> failed  !
+        @O!STRINGFAIL!                  !   unterminated string         !
+'                                       ! endif                         !
+QC-1,.K                                 ! kill entire comment           !
+0U1                                     ! clear @-modified flag         !
+F<                                      ! jump to main loop             !
+
+! --------------------------------------------------------------------- !
 ! handle '^'.  the next character is really CTRL-char.  we'll delete    !
 ! the "^char" construct, insert the "real" control char, and go back    !
 ! and process it again.  we'll watch out for inserting ^[ (<ESC>), we   !
@@ -905,59 +986,6 @@ Q0@I%%                                  ! insert <delim>                !
 F<                                      ! jump to main loop             !
 
 ! --------------------------------------------------------------------- !
-! handle '1'.  we've run into ", %, G, M, Q, U, X, [, or ].  For ", the !
-! next character is a conditional execution command.  For everything    !
-! else, the next character is a Q-register name.  In either case, if    !
-! the next char is lowercase, we uppercase it; otherwise, we fall       !
-! through to the 'V' code below which simply advances past the char.    !
-! --------------------------------------------------------------------- !
-
-!1!
-
-0A-^^."E                                ! if it's .q (local Q-reg name) !
-        C                               !   advance past "."            !
-'                                       ! endif                         !
-0A"V                                    ! if lowercase                  !
-        0A-32U0                         !   convert to uppercase        !
-        D                               !   delete lowercase char       !
-        Q0@I%%                          !   insert uppercase char       !
-        @O!.!                           !   goto .                      !
-'                                       ! endif                         !
-! ... fall through ...!
-
-! --------------------------------------------------------------------- !
-! handle 'V'.  we've run into <CTRL>-^, simply skip it                  !
-! --------------------------------------------------------------------- !
-
-!V!
-
-C                                       ! simply advance past it        !
-@O!.!                                   ! goto .                        !
-
-! --------------------------------------------------------------------- !
-! handle '@'.  the following command is @ modified, set a flag in 1.num !
-! so we know to look for the alternate delimiter characters.            !
-!                                                                       !
-! even though <delim> characters will be specified along with the '@'   !
-! command, we'll try to use ESC whenever possible and convert the @     !
-! modified command back into a "normally" delimited command.            !
-! --------------------------------------------------------------------- !
-
-!@!
-
--1U1                                    ! set @-modified flag           !
-! ...fall through ... !
-
-! --------------------------------------------------------------------- !
-! handle 'D'.  delete the character from the output file                !
-! --------------------------------------------------------------------- !
-
-!D!
-
--D                                      ! delete last character         !
-@O!.!
-
-! --------------------------------------------------------------------- !
 ! handle 'F'.  we've run into a F', F<. F>, F|, FB, FC, FD, FK, FN, FR, !
 ! FS, or F_ command.                                                    !
 ! --------------------------------------------------------------------- !
@@ -1158,34 +1186,6 @@ Q1"T                                    ! if @-modified                 !
 -D                                      ! delete second <delim>         !
 .UT                                     ! T.num = end of text           !
 @O!AA!                                  ! goto AA                       !
-
-! --------------------------------------------------------------------- !
-! handle 'C'.  we've run into an exclamation point with the /C switch   !
-! set.  Q-register C contains the special comment delimiter characters. !
-! --------------------------------------------------------------------- !
-
-!C!
-0A-^^! "E                               !! if alternative comment
-        .UC                             !!   num C <- point
-        10@^U1%%                        !!   search delim <- <LF>
-|                                       !! else (normal label)
-        ::@S%^EGC%"U                    !!   if not special label delim
-                @O!A!                   !!     handle like ^Astring^A
-        '                               !!   fi
-        R                               !!   back up past special delim
-        .UC                             !!   num C <- current point
-        Q0@^U1%%                        !!   str 1 <- exclamation mark
-        Q1"T                            !!   if @-modified
-                0A@^U1%%                !!     set search delim
-                D                       !!     delete delim
-        '                               !!   fi
-'                                       !! fi
-:@S%^EQ1%"U                             ! if search for <delim> failed  !
-        @O!STRINGFAIL!                  !   unterminated string         !
-'                                       ! endif                         !
-QC-1,.K                                 ! kill entire comment           !
-0U1                                     ! clear @-modified flag         !
-F<                                      ! jump to main loop             !
 
 ! --------------------------------------------------------------------- !
 ! handle 'E'.  we've run into an E command.                             !
