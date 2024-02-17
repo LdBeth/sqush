@@ -23,6 +23,7 @@ EO - 200 "L
 !!   alternative comment form would always happen.
 !! * New switch /P for handle paired delimiter, accepting
 !!   arg Y or N.
+!! * Special treatment to ^Z is disabled.
 
 !! str 9: a mask containing labels we'll use in a goto.  Each
 !! character in the mask corresponds with a TECO command character
@@ -200,7 +201,7 @@ J                               !! go to beginning
                 !! <CR>, and <SP> marked as D.
                 !!
                 !!  %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ %
-                @^U9%DA.......TD..D.......U....Z...V.D%
+                @^U9%DA.......TD..D.......U........V.D%
         '                       !!   fi
 '                               !! fi
 
@@ -238,7 +239,7 @@ J                               !!   go to beginning
                 !! with <LF>, <CR>, and <SP> marked as O.
                 !!
                 !!  %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ %
-                @^U9%DA.......TO..O.......U....Z...V.O%
+                @^U9%DA.......TO..O.......U........V.O%
                 70UD            !!     set line length to 70
         '                       !!   fi
 '                               !! fi
@@ -262,7 +263,7 @@ J                               !!   go to beginning
         !! <CR>, and <SP> marked as O.
         !!
         !!  %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ %
-        @^U9%DA.......TO..O.......U....Z...V.O%
+        @^U9%DA.......TO..O.......U........V.O%
 '                               !!   fi
 0; >                            !! EXIT:
 
@@ -295,7 +296,7 @@ J                                       !! go to beginning
                         !! with <LF> marked as B and <SP> marked as D.
                         !!
                         !!  %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ %
-                        @^U9%DA.......TB..........U....Z...V.D%
+                        @^U9%DA.......TB..........U........V.D%
 
                 '                       !!     fi
         '                               !!   fi
@@ -306,7 +307,7 @@ J                                       !! go to beginning
 :Q9 "E                                  !! if str 9 is empty
                                         !!   load default mask
         !!  %@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ %
-        @^U9%DA.......T...........U....Z...V.D%
+        @^U9%DA.......T...........U........V.D%
 '                                       !! fi
 
 !! Check for /T "Delete lexical TABs and FFs" switch.
@@ -1223,7 +1224,7 @@ Q0-^^N"E                                ! if it's EN                    !
         @O!$$!                          !   goto $$                     !
 '                                       ! endif                         !
 Q0-^^Q"E                                ! if it's EQ                    !
-        @O!E$!                          !   goto E$                     !
+        @O!E1!                          !   goto E1                     !
 '                                       ! endif                         !
 Q0-^^R"E                                ! if it's ER                    !
         @O!$$!                          !   goto $$                     !
@@ -1238,13 +1239,13 @@ Q0-^^_"E                                ! if it's E_                    !
         @O!$$!                          !   goto $$                     !
 '                                       ! endif                         !
 Q0-^^%"E                                ! if it's E%                    !
-        @O!E$!                          !   goto E$                     !
+        @O!E1!                          !   goto E1                     !
 '                                       ! endif                         !
 @O!.!
 
 !! Handle EQq, E%q that takes one string argument.
 
-!E$!
+!E1!
 
 0A-^^."E                                !! if it's .q (local Q-reg name)
         C                               !!   advance past "."
@@ -1261,12 +1262,13 @@ C                                       !! advance past Q-reg name
 ! --------------------------------------------------------------------- !
 ! handle 'Z'.  we've run into a ^Z, replace it with <CARET>-Z           !
 ! --------------------------------------------------------------------- !
-
-!Z!
+@!+
+!Z!     !! disabled because TECO-64 does not suspend on literal ^Z
 
 -D                                      ! delete <CTRL>-Z               !
 @I%^Z%                                  ! insert <CARET>-Z              !
 F<                                      ! jump to main loop             !
++
 
 >                                       ! main loop end---------------- !
 
