@@ -31,10 +31,12 @@ Actually I made this project to torture test the emacs mode I made.
 
 ## TECO-64 specific language features that are not (yet) supported
 
-* TECO-64 automatically skips ascii space charachter when look for
+* TECO-64 automatically skips ascii space character when look for
   delimiters for `@` modified commands. This macro does not yet do
   that, so spaces before delimiter are not allowed.
 
 * TECO-64 supports using `!` as operator in arithmetic expression
   enclosed between `()`.
 
+* TECO-64 does not consume text argument to `I` if it already has
+  a numerical argument.
