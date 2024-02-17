@@ -64,9 +64,6 @@ J                               !! go to beginning
 UB                              !! -> num B
 QB "T                           !! if switches
         R                       !!   back one char
-        ET&64 "E                !!   if not detached
-                13 ^T 10 ^T     !!     type <CR><LF>
-        '                       !!   fi
 |                               !! else
         ZJ                      !!   go to pos end
 '                               !! fi
@@ -491,10 +488,9 @@ J                                       !! jump to beginning of buffer
 
 0,0XY                   !! clear get arg macro
 
+< @FS%^ES%%; >          !! remove spaces
 Z "G                    !! if command switches are not consumed
         :@^A%Command switches not fully consumed%
-ht
-:@^A/EOB/
 '                       !! fi
 HK                      !! clear buffer
 G.F                     !! retrive file names
