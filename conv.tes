@@ -6,7 +6,7 @@ EO - 200 "L
 Z "E :@^A/File name with -T option/ ^C '
 ^D                       !! Set decimal
 HXa @ER/^EQa/
-J @FS/.out/.mp/
+J @FS[.out][.mp]
 HXa @EW/^EQa/ HK         !! Setup input output
 Y                        !! yank file into buffer
 0,1:@FB/sat/ "U          !! Check SMT output
@@ -25,5 +25,8 @@ end;
 EX
 ^[^[
 @!/this concludes the program./
-@I[This is a string]
-
+@I[This is a  string]
+@FS/foo/as/
+@^Ur%foo%
+@EQa/foo/
+EX

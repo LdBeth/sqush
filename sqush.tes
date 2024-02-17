@@ -85,10 +85,8 @@ ZJ                              !! go to end
 
 !! build a mini-macro in Q-reg 1 which will put the user's response
 !! into the Q-reg we are using to return the user's response in.
-@I%Q2,.X%                       !! insert text to buffer
-Q.3&127@I%%                     !! insert Q-reg name
-Q.2,.X.1                        !! save the inserted macro
-Q.2,.K                          !! and clean up it
+@^U.1%X%                        !! insert text to str 1
+Q.3&127:@^U.1%%                 !! insert Q-reg name
 
 !! display the prompt on a new, clean, line
 
@@ -160,7 +158,7 @@ Q.0@I%%                         !! insert input char to buffer
 
 Q.X; >                          !! DONE:
 
-M.1                             !! run macro 1 to load Q-reg w/response
+Q2,.M.1                         !! run macro 1 to load Q-reg w/response
 Q.2,.K                          !! clean up input
 
 Q.1J                            !! restore to original buffer position
@@ -505,11 +503,13 @@ G.F                     !! retrive file names
 @^UZ{                                   !! str Z <- squish macro
 [1                                      ! save Q-reg 1                  !
 0U1                                     ! clear @-modifed flag          !
+@!+
 :QW"N                                   ! if /W was TRUE                !
         -1,3:W^[                         !   turn on SEEALL mode         !
         0,4:W^[                          !   set no "mark" status        !
         0,5:W^[                          !   turn hold mode off          !
 '                                       ! endif                         !
++
 
 !! ---------------------------------------------------------------------
 !! main loop start
@@ -725,12 +725,16 @@ Q1"T                                    !! if @-modifed
 ! --------------------------------------------------------------------- !
 
 :QK"E                                   ! if no non-squishable ^U delim !
+@!+
         :QW"E                           !   if /W was FALSE             !
++
                 0T                      !     display line up to now    !
                 10^T                    !     display <LF>              !
                 T                       !     display rest of line      !
+@!+
         '                               !   endif                       !
         7^T                             !   display <BEL>               !
++
         ETUQ                            !   save ET flags in Q.num      !
         ET#8#4-4ET                      !   turn on read w/o echo       !
         ^TU0                            !   read char into 0.num        !
@@ -1219,7 +1223,7 @@ Q0-^^N"E                                ! if it's EN                    !
         @O!$$!                          !   goto $$                     !
 '                                       ! endif                         !
 Q0-^^Q"E                                ! if it's EQ                    !
-        @O!E1!                          !   goto E1                     !
+        @O!E$!                          !   goto E$                     !
 '                                       ! endif                         !
 Q0-^^R"E                                ! if it's ER                    !
         @O!$$!                          !   goto $$                     !
@@ -1234,13 +1238,13 @@ Q0-^^_"E                                ! if it's E_                    !
         @O!$$!                          !   goto $$                     !
 '                                       ! endif                         !
 Q0-^^%"E                                ! if it's E%                    !
-        @O!E1!                          !   goto E1                     !
+        @O!E$!                          !   goto E$                     !
 '                                       ! endif                         !
 @O!.!
 
 !! Handle EQq, E%q that takes one string argument.
 
-!E1!
+!E$!
 
 0A-^^."E                                !! if it's .q (local Q-reg name)
         C                               !!   advance past "."
