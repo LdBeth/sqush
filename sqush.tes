@@ -645,13 +645,12 @@ F<                                      ! jump to main loop             !
 0A&31U0                                 ! 0.num = ^char                 !
 C                                       ! skip past char                !
 -2D                                     ! delete both ^ and char        !
-QH"F                                    ! if no adjacent ESC's          !
-        Q0-27"E                         !   if ^char is ESC             !
-                0A-27"E                 !     if next char is ESC       !
-                        @I%^[%           !       insert a single ESC     !
-                        C               !       skip past next ESC      !
-                        F<              !       jump to main loop       !
-                '                       !     endif                     !
+QH#(Q0-27) "E                           ! if no adjacent ESC's          !
+        0A-27"E                         !   if next char is ESC         !
+                @I%^[%                   !     insert a single ESC       !
+                C                       !     skip past next ESC        !
+                F<                      !     jump to main loop         !
+        '                               !   endif                       !
                 ! ----------------------------------------------------- !
                 ! at this point we are trying to insert an ESC; but we  !
                 ! don't know if by doing so we will inadvertently form  !
@@ -661,27 +660,26 @@ QH"F                                    ! if no adjacent ESC's          !
                 ! also an ESC.  if it was, we'll insert a <SP> to keep  !
                 ! the two ESC's lexically apart.                        !
                 ! ----------------------------------------------------- !
-                .US                     !     S.num = cur buf ptr       !
-                0UT                     !     T.num = 0                 !
-                <                       ! ----loop begin--------------- !
-                        -.;             !       break if .==0           !
-                        R               !       back up one char        !
-                        0AUT            !       T.num = previous char   !
-                        QT&128"E        !       if hi bit of char zero  !
-                                QT-10"N         ! if char is not <LF>   !
-                                        0;      !   break out of loop   !
-                                |               ! else (it is <LF>)     !
-                                        -.;     !   break if .==0       !
-                                        -1A-128-13"N ! if not <CR><LF>  !
-                                                0;  ! break out of loop !
-                                        '       !   endif               !
-                                '               ! endif                 !
-                        '               !       endif                   !
-                >                       ! ----loop end----------------- !
-                QSJ                     !       jump to where we startd !
-                QT-27"E                 !       if last char == ESC     !
-                        @I% %           !         insert <SP>           !
-                '                       !       endif                   !
+        .US                             !   S.num = cur buf ptr         !
+        0UT                             !   T.num = 0                   !
+        <                               ! ----loop begin--------------- !
+                -.;                     !     break if .==0             !
+                R                       !     back up one char          !
+                0AUT                    !     T.num = previous char     !
+                QT&128"E                !     if hi bit of char zero    !
+                        QT-10"N               ! if char is not <LF>     !
+                                0;            !   break out of loop     !
+                        |                     ! else (it is <LF>)       !
+                                -.;           !   break if .==0         !
+                                -1A-128-13"N  !   if not <CR><LF>       !
+                                        0;    !     break out of loop   !
+                                '             !   endif                 !
+                        '                     ! endif                   !
+                '                       !     endif                     !
+        >                               ! ----loop end----------------- !
+        QSJ                             !     jump to where we startd   !
+        QT-27"E                         !     if last char == ESC       !
+                @I% %                   !       insert <SP>             !
         '                               !     endif                     !
 '                                       !   endif                       !
 Q0@I%%                                  ! insert ^char                  !
