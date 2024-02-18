@@ -1003,31 +1003,14 @@ Q0"V                                    ! if 2nd cmd char is lowercase  !
 ! the FC, FS, FN, and F_ commands take two string arguments, goto F$$   !
 ! --------------------------------------------------------------------- !
 
-Q0-^^B"E                                !! if it's FB
-        @O!$$!                          !!   goto $$
-'                                       !! endif
-Q0-^^C"E                                !! if it's FC
-        @O!F$$!                         !!   goto F$$
-'                                       !! endif
-Q0-^^D"E                                !! if it's FD
-        @O!$$!                          !!   goto $$
-'                                       !! endif
-Q0-^^K"E                                !! if it's FK
-        @O!$$!                          !!   goto $$
-'                                       !! endif
-Q0-^^R"E                                !! if it's FR
-        @O!$$!                          !!   goto $$
-'                                       !! endif
-Q0-^^S"E                                !! if it's FS
-        @O!F$$!                         !!   goto F$$
-'                                       !! endif
-Q0-^^N"E                                !! if it's FN
-        @O!F$$!                         !!   goto F$$
-'                                       !! endif
-Q0-^^_"E                                !! if it's F_
-        @O!F$$!                         !!   goto F$$
-'                                       !! endif
-@O!.!
+(Q0-^^B)*(Q0-^^D)*(Q0-^^K)*(Q0-^^R) "E
+        @O!$$!
+'
+(Q0-^^C)*(Q0-^^S)*(Q0-^^N)*(Q0-^^_) "E
+        ! Fall through !
+|
+        @O!.!
+'
 
 ! --------------------------------------------------------------------- !
 ! handle FC, FS, FN, and F_ commands which take two string arguments,   !
@@ -1050,8 +1033,6 @@ Q0-^^_"E                                !! if it's F_
 
 !! For TECO-64 the paired delmiter syntax is
 !! @FS[text1][text2]
-
-!F$$!
 
 .US                                     ! S.num = start of text1        !
 27@^U1%%                                ! 1.str = ESC (default delim)   !
@@ -1204,44 +1185,18 @@ Q0"V                                    ! if 2nd cmd char is lowercase  !
 !! they have to be passed to the $$ routine.
 !! ---------------------------------------------------------------------
 
-Q0-^^B"E                                ! if it's EB                    !
-        @O!$$!                          !   goto $$                     !
-'                                       ! endif                         !
-Q0-^^G"E                                ! if it's EG                    !
-        @O!$$!                          !   goto $$                     !
-'                                       ! endif                         !
-Q0-^^I"E                                ! if it's EI                    !
-        @O!$$!                          !   goto $$                     !
-'                                       ! endif                         !
-Q0-^^L"E                                ! if it's EL                    !
-        @O!$$!                          !   goto $$                     !
-'                                       ! endif                         !
-Q0-^^N"E                                ! if it's EN                    !
-        @O!$$!                          !   goto $$                     !
-'                                       ! endif                         !
-Q0-^^Q"E                                ! if it's EQ                    !
-        @O!E1!                          !   goto E1                     !
-'                                       ! endif                         !
-Q0-^^R"E                                ! if it's ER                    !
-        @O!$$!                          !   goto $$                     !
-'                                       ! endif                         !
-Q0-^^W"E                                ! if it's EW                    !
-        @O!$$!                          !   goto $$                     !
-'                                       ! endif                         !
-Q0-^^Z"E                                ! if it's EZ                    !
-        @O!$$!                          !   goto $$                     !
-'                                       ! endif                         !
-Q0-^^_"E                                ! if it's E_                    !
-        @O!$$!                          !   goto $$                     !
-'                                       ! endif                         !
-Q0-^^%"E                                ! if it's E%                    !
-        @O!E1!                          !   goto E1                     !
-'                                       ! endif                         !
-@O!.!
+(Q0-^^B)*(Q0-^^G)*(Q0-^^I)*(Q0-^^L)*(Q0-^^N)*(Q0-^^R)*(Q0-^^W)*
+(Q0-^^Z)*(Q0-^^_) "E    !! this is safe from overflow
+        @O!$$!          !! even when integer is 32 bit
+'
+
+(Q0-^^Q)*(Q0-^^%) "E
+        ! fall through !
+|
+        @O!.!
+'
 
 !! Handle EQq, E%q that takes one string argument.
-
-!E1!
 
 0A-^^."E                                !! if it's .q (local Q-reg name)
         C                               !!   advance past "."
