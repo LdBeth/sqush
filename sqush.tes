@@ -1033,19 +1033,19 @@ Q0"V                                    ! if 2nd cmd char is lowercase  !
 !! @FS[text1][text2]
 
 .US                                     ! S.num = start of text1        !
-27@^U1%%                                ! 1.str = ESC (default delim)   !
 Q1"T                                    !! if @-modified
+        @^U1%%                          !!   clear str 1
         QP "T                           !!   if /P
                 ::@S%^EGP% "S @O!INVLDLIM! ' !! check invalid delim
-                0A-^^( "E D @^U1%)(% |  !!     setup delim in between
-                0A-^^[ "E D @^U1%][% |
-                0A-^^< "E D @^U1%><% |
-                0A-^^{ "E D 125@^U1%% :@^U1%{% |
-                0A@^U1%% D ' ' ' '
-        |                               !!   else
-                0A@^U1%%                !!     1.str = <delim>
-                D                       !!     delete <delim>
+                0A-^^( "E @^U1%)% '     !!     setup delim in between
+                0A-^^[ "E @^U1%]% '
+                0A-^^< "E @^U1%>% '
+                0A-^^{ "E 125@^U1%% '
         '                               !!   fi
+        0A:@^U1%%                       !!   append <delim> to str 1
+        D                               !!   delete <delim>
+|                                       !! else
+        27@^U1%%                        !!   1.str = ESC (default delim)
 '                                       !! fi
 :@S%^EQ1%"U                             !! if search for 1st delim fails
         @O!STRINGFAIL!                  !!   unterminated string
