@@ -28,5 +28,6 @@ EX
 @I[This is a  string]
 @FS/foo/as/
 @^Ur%foo%
+@^Ub{}
 @EQa/foo/
 EX

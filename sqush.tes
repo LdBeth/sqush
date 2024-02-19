@@ -24,7 +24,15 @@ EO - 200 "L
 !! * New switch /P for handle paired delimiter, accepting
 !!   arg Y or N.
 !! * Special treatment to ^Z is disabled.
+!! * Removed undefined macro P.
 
+!! n B: TRUE if any command line switches were present.
+!!
+!! n C: the buffer pointer while squishing things for error
+!! reporting purposes.
+!!
+!! n H: TRUE (-1) if we are allowing adjacent escapes
+!!
 !! str 9: a mask containing labels we'll use in a goto.  Each
 !! character in the mask corresponds with a TECO command character
 !! and controls some action the squisher takes when it runs into
@@ -55,9 +63,6 @@ EO - 200 "L
 ^D                              !! set decimal
 0ED                             !! set edit mode zero
 0^X                             !! set search mode zero
-ET&128 "N                       !! if abort-on-error not set
-        0,0XP                   !!   clear str P
-'                               !! fi
 0,128ET                         !! set abort-on-error
 J                               !! go to beginning
 :@S%/%                          !! look for '/' switch
