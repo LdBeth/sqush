@@ -161,7 +161,7 @@ Q.0@I%%                         !! insert input char to buffer
 
 Q.X; >                          !! DONE:
 
-Q2,.M.1                         !! run macro 1 to load Q-reg w/response
+Q.2,.M.1                        !! run macro 1 to load Q-reg w/response
 Q.2,.K                          !! clean up input
 
 Q.1J                            !! restore to original buffer position
