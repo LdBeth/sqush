@@ -39,4 +39,5 @@ Actually I made this project to torture test the emacs mode I made.
   enclosed between `()`.
 
 * TECO-64 does not consume text argument to `I` if it already has
-  a numerical argument.
+  a numerical argument. This means `1i2i3i` is valid for TECO-64
+  but not in traditional TECOs.
