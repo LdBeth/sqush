@@ -78,18 +78,11 @@ QB "T                           !! if switches
 
 !! R get Response from user
 @^UR{
-+0U.3                           !! num 3 <- Q-reg name on argument stack
 ^YX.0                           !! str 0 <- last inserted string
 ^YK                             !! kill display prompt
-Q.3&127 "R                      !! if Q-reg name in num 3 is alphanumeric
 .U.1                            !! num 1 <- current point
 ZJ                              !! go to end
 .U.2                            !! num 2 <- save buffer end pos
-
-!! build a mini-macro in Q-reg 1 which will put the user's response
-!! into the Q-reg we are using to return the user's response in.
-@^U.1%X%                        !! insert text to str 1
-Q.3&127:@^U.1%%                 !! insert Q-reg name
 
 !! display the prompt on a new, clean, line
 
@@ -146,29 +139,20 @@ Q.0-27 "E                       !! if char = <ESC>
         13^T 10^T               !!   type <CR> <LF>
         1U.X 0;                 !!   go to DONE
 '                               !! fi
-Q.3&128 "E                      !! if hi-bit of return Q-reg name is zero
-        Q.0-10 "E               !!   if char = <LF>
-                13^T            !!     display <CR>
-                1U.X 0;         !!     go to DONE
-        '                       !!   fi
-        Q.0-13 "E               !!   if char = <CR>
-                ^T^[             !!     absorb next char
-                1U.X 0;         !!     go to DONE
-        '                       !!   fi
-'                               !! fi
+Q.0-10 "E                       !!   if char = <LF>
+        13^T                    !!     display <CR>
+        1U.X 0;                 !!     go to DONE
+'                               !!   fi
 Q.0@I%%                         !! insert input char to buffer
 >                               !! go to GETCH
 
 Q.X; >                          !! DONE:
 
-Q.2,.M.1                        !! run macro 1 to load Q-reg w/response
+Q.2,.XQ                         !! load Q-reg w/response
 Q.2,.K                          !! clean up input
 
 Q.1J                            !! restore to original buffer position
 
-|                               !! else (Q.3 not alphanumeric)
-        :@^A%?Invalid Q-register in INPLIN%
-'                               !! fi (Q.3&127 "R)
 }                               !! end of ^UR
 
 !! Check for command line switches.
@@ -194,7 +178,7 @@ J                               !! go to beginning
                 @^UQ%%          !!     str Q <- ""
         |                       !!   else
                 @I%Delete CR/LF (Y/N) <N>? %
-                ^^QMR           !!     ask for /D
+                MR              !!     ask for /D
         '                       !!   fi
 '                               !! fi
 0QQ "A                          !! if /D is alphabetic
@@ -232,7 +216,7 @@ J                               !!   go to beginning
                 @^UQ%%          !!     str Q <- ""
         |                       !!   else
                 @I%Set line lengths (Y for 70, N, or length) <N>? %
-                ^^QMR           !!     ask for /L
+                MR              !!     ask for /L
         '                       !!   fi
 '                               !! fi
 0QQ "A                          !! if /L is alphabetic
@@ -289,7 +273,7 @@ J                                       !! go to beginning
                         @^UQ%%          !!        str Q <- ""
                 |                       !!     else
                         @I%Delete blank lines (Y/N) <N>? %
-                        ^^QMR           !!       ask for /B value
+                        MR              !!       ask for /B value
                 '                       !!     fi
         '                               !!   fi
         0QQ "A                          !!   if /B is alphabetic
@@ -322,7 +306,7 @@ J                                       !! go to beginning
                 @^UQ%%                  !!     str Q <- ""
         |                               !!   else
                 @I%Delete lexical TABs and FORM FEEDs (Y/N) <N>? %
-                ^^QMR                   !!     ask for /T
+                MR                      !!     ask for /T
         '                               !!   fi
 '                                       !! fi
 0QQ "A                                  !! if /T is alphabetic
@@ -360,14 +344,16 @@ J                                       !! go to beginning
                 @^UQ%%                  !!     str Q <- ""
         |                               !!   else
                 @I%Special comment delimters <SP/TAB>? %
-                ^^QMR                   !!     ask for /C
+                MR                      !!     ask for /C
         '                               !!   fi
 '                                       !! fi
 @^UC% %                                 !! str C <- <SP>
 9:@^UC%%                                !! append TAB to str C
-GQ                                      !! put /C in buffer
-^Y:XC                                   !! load to Q-reg C
-^YK                                     !! clean up
+:QQ "G                                  !! if has input
+        GQ                              !!   put /C in buffer
+        ^Y:XC                           !!   load to Q-reg C
+        ^YK                             !!   clean up
+'                                       !! fi
 
 !! append entries for all other TECO commands to the mask in Q-reg 9
 
@@ -398,7 +384,7 @@ J                               !! go to beginning
                 @^UQ%%          !!     str Q <- ""
         |                       !!   else
                 @I%Use paired delimiter (Y/N) <N>? %
-                ^^QMR           !!     ask for /P
+                MR              !!     ask for /P
         '                       !!   fi
 '                               !! fi
 0QQ "A                          !! if /P is alphabetic
@@ -427,7 +413,7 @@ J                                       !! go to beginning
                 @^UQ%%                  !!     str Q <- "Y"
         |                               !!   else
                 @I%Watch progress (Y/N) <N>? %
-                ^^QMR                   !!     ask for /W
+                MR                      !!     ask for /W
         '                               !!   fi
 '                                       !! fi
 0QQ "A                                  !! if /W is alphabetic
@@ -447,7 +433,7 @@ J                                       !! go to beginning
                 @^UQ%Y%                 !!     str Q <- "Y"
         |                               !!   else
                 @I/Automatic mode (Y for %, N, or set) <N>? /
-                ^^QMR                   !!     ask for /A
+                MR                      !!     ask for /A
         '                               !!   fi
 '                                       !! fi
 :QQ"N                                   !! if any /A val
@@ -482,7 +468,7 @@ J                                       !! jump to beginning of buffer
                 @^UQ%%                  !!     Q.str = ""
         |                               !!   else
                 @I%Allow adjacent ESCapes (Y/N) <N>? %
-                ^^QMR                   !!     ask for /E value
+                MR                      !!     ask for /E value
         '                               !!   fi
 '                                       !! fi
 0QQ"A                                   !! if /E val is alphabetic
@@ -777,14 +763,14 @@ Q1"T                                    ! if @-modified                 !
 '                                       ! endif                         !
 .US                                     ! S.num = current buf ptr       !
 Q1"T                                    !! if @-modifed
+        0A@^U1%%                        !!   1.str = <delim>
         QP "T                           !!   if /P, report error for
                 ::@S%^EGP% "S @O!INVLDLIM! ' !! right paren
-                0A-^^( "E D @I%)% -C '  !!      convert left parens
-                0A-^^[ "E D @I%]% -C '  !! this is the same code in !$$!
-                0A-^^< "E D @I%>% -C '
-                0A-^^{ "E D 125@I%% -C '
+                0A-^^( "E @^U1%)% '     !!      convert left parens
+                0A-^^[ "E @^U1%]% '     !! this is the same code in !$$!
+                0A-^^< "E @^U1%>% '
+                0A-^^{ "E 125@^U1%% '
         '                               !!   fi
-        0A@^U1%%                        !!   1.str = <delim>
         D                               !!   delete <delim>
 '                                       !! fi
 @!+
@@ -899,14 +885,14 @@ Q0-^^Y"E                                ! if 0.num is Y                 !
 
 .US                                     ! S.num = start of text         !
 Q1"T                                    ! if @-modified                 !
+        0A@^U1%%                        !   1.str = <delim>             !
         QP "T                           !!   if /P, report error for
                 ::@S%^EGP% "S @O!INVLDLIM! ' !! right curly brackt
-                0A-^^( "E D @I%)% -C '    !!      right ...
-                0A-^^[ "E D @I%]% -C '
-                0A-^^< "E D @I%>% -C '
-                0A-^^{ "E D 125@I%% -C '
+                0A-^^( "E @^U1%)% '     !!      right ...
+                0A-^^[ "E @^U1%]% '
+                0A-^^< "E @^U1%>% '
+                0A-^^{ "E 125@^U1%% '
         '                               !!   fi
-        0A@^U1%%                        !   1.str = <delim>             !
         D                               !   delete <delim>              !
 '                                       ! endif                         !
 
@@ -968,10 +954,10 @@ QT-QS"G                                 ! if string is not-empty        !
                 QSJ                     !     jump to start of string   !
                 Q0@I%%                  !     insert <delim>            !
                 QP "T                   !!    if /P
-                        -1A-^^) "E -D @I%(% ' !! replace pair delimiters
-                        -1A-^^] "E -D @I%[% '
-                        -1A-^^> "E -D @I%<% '
-                        -1A-125 "E -D @I%{% '
+                        Q0-^^) "E -D @I%(% ' !! replace pair delimiters
+                        Q0-^^] "E -D @I%[% '
+                        Q0-^^> "E -D @I%<% '
+                        Q0-125 "E -D @I%{% '
                 '                       !!    fi
                 QC-1J                   !     jump before command       !
                 @I%@%                   !     insert @                  !
@@ -1120,10 +1106,10 @@ Q0Q1U0                                  ! 0.num = Q0th char of Q1       !
 QSJ                                     ! jump to start of text1        !
 Q0@I%%                                  ! insert <delim>                !
 QP "T                                   !! if /P
-        -1A-^^) "E -D @I%(% '           !!   replace pair delimiters
-        -1A-^^] "E -D @I%[% '
-        -1A-^^> "E -D @I%<% '
-        -1A-125 "E -D @I%{% '
+        Q0-^^) "E -D @I%(% '            !!   replace pair delimiters
+        Q0-^^] "E -D @I%[% '
+        Q0-^^> "E -D @I%<% '
+        Q0-125 "E -D @I%{% '
 '                                       !! fi
 QC-1J                                   ! jump 1 char before F command  !
 @I%@%                                   ! insert @                      !
@@ -1135,10 +1121,10 @@ QC-1J                                   ! jump 1 char before F command  !
 QTJ                                     ! jump to end of text1          !
 Q0@I%%                                  ! insert <delim>                !
 QP "T                                   !! if /P
-        -1A-^^) "E @I%(% '              !!   replace pair delimiters
-        -1A-^^] "E @I%[% '
-        -1A-^^> "E @I%<% '
-        -1A-125 "E @I%{% '
+        Q0-^^) "E @I%(% '               !!   replace pair delimiters
+        Q0-^^] "E @I%[% '
+        Q0-^^> "E @I%<% '
+        Q0-125 "E @I%{% '
 '                                       !! fi
 QU-QTC                                  ! advance to end of text2       !
 Q0@I%%                                  ! insert <delim>                !
@@ -1451,7 +1437,7 @@ MZ"E                                    ! if squish macro returns OK    !
 
 Z"E                                     ! if edit buffer is empty       !
         @I%File <.TES or .TEC>? %       !   ask for input file          !
-        ^^QMR                           !   get response in Q.str       !
+        MR                              !   get response in Q.str       !
         GQ                              !   and put it into the buffer  !
 '                                       ! endif                         !
 0,0XR                                   ! clear R.str (response macro)  !
@@ -1561,7 +1547,7 @@ Z "E                    !! if no file arguments
                 ! then reading in the next page.                        !
                 ! ----------------------------------------------------- !
 
-                ^N"T                    !   if at end-of-file           !
+                ^N "T                   !   if at end-of-file           !
                         ^E"T            !     if formfeed flag          !
                                 ZJ      !       jump to buf end         !
                                 12@I%%  !       insert <FF>             !
@@ -1587,4 +1573,5 @@ Z "E                    !! if no file arguments
                 EX                      !   exit                        !
         '                               !   endif                       !
 '                                       !! fi
+
 ^[^[
