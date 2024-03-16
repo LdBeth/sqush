@@ -989,15 +989,14 @@ Q0"V                                    ! if 2nd cmd char is lowercase  !
 
 ! --------------------------------------------------------------------- !
 ! the FB, FD, FR, FK commands take a single string argument, goto $$    !
-! the FC, FS, FN, and F_ commands take two string arguments, goto F$$   !
+! the FC, FS, FN, and F_ commands take two string arguments, fall to    !
+! next case.                                                            !
 ! --------------------------------------------------------------------- !
 
-(Q0-^^B)*(Q0-^^D)*(Q0-^^K)*(Q0-^^R) "E
+(Q0==^^B#Q0==^^D#Q0==^^K#Q0==^^R) "T
         @O!$$!
 '
-(Q0-^^C)*(Q0-^^S)*(Q0-^^N)*(Q0-^^_) "E
-        ! Fall through !
-|
+(Q0==^^C#Q0==^^S#Q0==^^N#Q0==^^_) "F
         @O!.!
 '
 
@@ -1121,8 +1120,8 @@ QC-1J                                   ! jump 1 char before F command  !
 QTJ                                     ! jump to end of text1          !
 Q0@I%%                                  ! insert <delim>                !
 QP "T                                   !! if /P
-        Q0-^^) "E @I%(% '               !!   replace pair delimiters
-        Q0-^^] "E @I%[% '
+        Q0-^^) "E @I%(% '               !!   insert additional
+        Q0-^^] "E @I%[% '               !!    pair delimiters
         Q0-^^> "E @I%<% '
         Q0-125 "E @I%{% '
 '                                       !! fi
@@ -1174,14 +1173,11 @@ Q0"V                                    ! if 2nd cmd char is lowercase  !
 !! they have to be passed to the $$ routine.
 !! ---------------------------------------------------------------------
 
-(Q0-^^B)*(Q0-^^G)*(Q0-^^I)*(Q0-^^L)*(Q0-^^N)*(Q0-^^R)*(Q0-^^W)*
-(Q0-^^Z)*(Q0-^^_) "E    !! this is safe from overflow
-        @O!$$!          !! even when integer is 32 bit
+(Q0==^^B#Q0==^^G#Q0==^^I#Q0==^^L#Q0==^^N#
+Q0==^^R#Q0==^^W#Q0==^^Z#Q0==^^_) "T
+        @O!$$!
 '
-
-(Q0-^^Q)*(Q0-^^%) "E
-        ! fall through !
-|
+(Q0==^^Q#Q0==^^%) "F
         @O!.!
 '
 
