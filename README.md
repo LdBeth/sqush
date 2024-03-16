@@ -1,8 +1,9 @@
 # SQUSH
 
 This TECOC's `squ.tes` macro which removes comments and extra space in
-TECO macro source code to improve speed, adapted for TECO-64. Original
-author and license are unknown.
+TECO macro source code to improve speed, adapted for TECO-64 and makes
+some use of the extended features. Original author and license are
+unknown.
 
 SQUSH sub-squish into `^U` macros, and uses non-printable ASCII
 characters whenever possible, which TECO-64's builtin squisher `EM`
