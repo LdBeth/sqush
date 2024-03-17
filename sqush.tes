@@ -673,7 +673,7 @@ QH#(Q0-27) "E                           ! if no adjacent ESC's          !
                 @I% %                   !       insert <SP>             !
         '                               !     endif                     !
 '                                       !   endif                       !
-Q0@I%%                                  ! insert ^char                  !
+Q0@I%%                                  ! insert ^ char                 !
 @O!DISP!                                ! try again                     !
 
 ! --------------------------------------------------------------------- !
@@ -752,15 +752,12 @@ F<                                      ! jump to main loop             !
 C                                       !! advance past Q-reg name
 '                                       !! fi
 !! Take shortcut if text argument is empty
-Q1"T                                    ! if @-modified                 !
-        0A-(1A)"E                       !   if @^Uq<delim><delim>       !
-                @O!$$!                  !     goto $$                   !
-        '                               !   endif                       !
-|                                       ! else                          !
-        0A-27"E                         !   if ^Uq<ESC>                 !
-                @O!$$!                  !     goto $$                   !
-        '                               !   endif                       !
-'                                       ! endif                         !
+Q1 "T                                   !! if @-modified
+        (0A-27)*                        !!   if @^Uq<delim><delim> or
+        (0A-(1A)) "E                    !!     ^Uq<ESC>
+                @O!$$!                  !!     goto $$
+        '                               !!   fi
+'                                       !! fi
 .US                                     ! S.num = current buf ptr       !
 Q1"T                                    !! if @-modifed
         0A@^U1%%                        !!   1.str = <delim>

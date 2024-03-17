@@ -29,5 +29,6 @@ EX
 @FS/foo/as/
 @^Ur%foo%
 @^Ub{}
+@^Ub//
 @EQa/foo/
 EX
