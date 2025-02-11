@@ -499,6 +499,28 @@ G.F                     !! retrive file names
 '                                       ! endif                         !
 +
 
+!! Insert paired delimiter
+
+@^UD{
+U.B U.0                                 !! save m,n to .0 and .B
+Q.0 U.R                                 !! .R = .0
+QP "T                                   !! if /P
+        Q.B "G                          !!   if .B > 0
+                Q.0-^^( "E ^^)U.R '     !!     produced matched parenthesis
+                Q.0-^^[ "E ^^]U.R '
+                Q.0-^^< "E ^^>U.R '
+                Q.0-^^{ "E 125U.R '
+
+        |
+                Q.0-^^) "E ^^(U.R '     !!     reverse matched parenthesis
+                Q.0-^^] "E ^^[U.R '
+                Q.0-^^> "E ^^<U.R '
+                Q.0-125 "E ^^{U.R '
+        '                               !!  fi
+'                                       !! fi
+Q.R
+}
+
 !! ---------------------------------------------------------------------
 !! main loop start
 !! ---------------------------------------------------------------------
@@ -636,7 +658,7 @@ F<                                      ! jump to main loop             !
 0A&31U0                                 ! 0.num = ^char                 !
 C                                       ! skip past char                !
 -2D                                     ! delete both ^ and char        !
-QH#(Q0-27) "E                           ! if no adjacent ESC's          !
+QH#(Q0~27) "E                           ! if no adjacent ESC's          !
         0A-27"E                         !   if next char is ESC         !
                 @I%^[%                   !     insert a single ESC       !
                 C                       !     skip past next ESC        !
@@ -753,20 +775,16 @@ C                                       !! advance past Q-reg name
 '                                       !! fi
 !! Take shortcut if text argument is empty
 Q1 "T                                   !! if @-modified
-        (0A-27)*                        !!   if @^Uq<delim><delim> or
-        (0A-(1A)) "E                    !!     ^Uq<ESC>
+        (0A~27)#                        !!   if ^Uq<ESC> or
+        (0A~(1A)) "E                    !!      @^Uq<delim><delim>
                 @O!$$!                  !!     goto $$
         '                               !!   fi
 '                                       !! fi
 .US                                     ! S.num = current buf ptr       !
 Q1"T                                    !! if @-modifed
-        0A@^U1%%                        !!   1.str = <delim>
+        0A,1MD@^U1%%                    !!   1.str = <delim>
         QP "T                           !!   if /P, report error for
                 ::@S%^EGP% "S @O!INVLDLIM! ' !! right paren
-                0A-^^( "E @^U1%)% '     !!      convert left parens
-                0A-^^[ "E @^U1%]% '     !! this is the same code in !$$!
-                0A-^^< "E @^U1%>% '
-                0A-^^{ "E 125@^U1%% '
         '                               !!   fi
         D                               !!   delete <delim>
 '                                       !! fi
@@ -882,13 +900,9 @@ Q0-^^Y"E                                ! if 0.num is Y                 !
 
 .US                                     ! S.num = start of text         !
 Q1"T                                    ! if @-modified                 !
-        0A@^U1%%                        !   1.str = <delim>             !
+        0A,1MD@^U1%%                    !   1.str = <delim>             !
         QP "T                           !!   if /P, report error for
                 ::@S%^EGP% "S @O!INVLDLIM! ' !! right curly brackt
-                0A-^^( "E @^U1%)% '     !!      right ...
-                0A-^^[ "E @^U1%]% '
-                0A-^^< "E @^U1%>% '
-                0A-^^{ "E 125@^U1%% '
         '                               !!   fi
         D                               !   delete <delim>              !
 '                                       ! endif                         !
@@ -949,13 +963,7 @@ QT-QS"G                                 ! if string is not-empty        !
                 >                       ! ----loop end----------------- !
                 Q0Q1U0                  !     0.num = <delim> to use    !
                 QSJ                     !     jump to start of string   !
-                Q0@I%%                  !     insert <delim>            !
-                QP "T                   !!    if /P
-                        Q0-^^) "E -D @I%(% ' !! replace pair delimiters
-                        Q0-^^] "E -D @I%[% '
-                        Q0-^^> "E -D @I%<% '
-                        Q0-125 "E -D @I%{% '
-                '                       !!    fi
+                Q0,-1MD@I%%             !     insert <delim>            !
                 QC-1J                   !     jump before command       !
                 @I%@%                   !     insert @                  !
                 2%T^[                    !     T.num (end of text) += 2  !
@@ -1021,15 +1029,13 @@ Q0"V                                    ! if 2nd cmd char is lowercase  !
 
 .US                                     ! S.num = start of text1        !
 Q1"T                                    !! if @-modified
-        @^U1%%                          !!   clear str 1
+        0A,1MD@^U1%%                    !!   set str 1
         QP "T                           !!   if /P
                 ::@S%^EGP% "S @O!INVLDLIM! ' !! check invalid delim
-                0A-^^( "E @^U1%)% '     !!     setup delim in between
-                0A-^^[ "E @^U1%]% '
-                0A-^^< "E @^U1%>% '
-                0A-^^{ "E 125@^U1%% '
         '                               !!   fi
-        0A:@^U1%%                       !!   append <delim> to str 1
+        0A-(0Q1) "N                     !!   if use paired delimiter
+                0A:@^U1%%               !!     append <delim> to str 1
+        '                               !!   fi
         D                               !!   delete <delim>
 |                                       !! else
         27@^U1%%                        !!   1.str = ESC (default delim)
@@ -1100,13 +1106,7 @@ G8                                      ! put 8.str into buf            !
 
 Q0Q1U0                                  ! 0.num = Q0th char of Q1       !
 QSJ                                     ! jump to start of text1        !
-Q0@I%%                                  ! insert <delim>                !
-QP "T                                   !! if /P
-        Q0-^^) "E -D @I%(% '            !!   replace pair delimiters
-        Q0-^^] "E -D @I%[% '
-        Q0-^^> "E -D @I%<% '
-        Q0-125 "E -D @I%{% '
-'                                       !! fi
+Q0,-1MD@I%%                             ! insert <delim>                !
 QC-1J                                   ! jump 1 char before F command  !
 @I%@%                                   ! insert @                      !
 2%T^[                                    ! T.num (end of text1) += 2     !
