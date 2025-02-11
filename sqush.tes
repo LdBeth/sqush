@@ -155,6 +155,28 @@ Q.1J                            !! restore to original buffer position
 
 }                               !! end of ^UR
 
+!! Insert paired delimiter
+
+@^UD{
+U.B U.0                                 !! save m,n to .0 and .B
+Q.0 U.R                                 !! .R = .0
+QP "T                                   !! if /P
+        Q.B "G                          !!   if .B > 0
+                Q.0-^^( "E ^^)U.R '     !!     produced matched parenthesis
+                Q.0-^^[ "E ^^]U.R '
+                Q.0-^^< "E ^^>U.R '
+                Q.0-^^{ "E 125U.R '
+
+        |
+                Q.0-^^) "E ^^(U.R '     !!     reverse matched parenthesis
+                Q.0-^^] "E ^^[U.R '
+                Q.0-^^> "E ^^<U.R '
+                Q.0-125 "E ^^{U.R '
+        '                               !!  fi
+'                                       !! fi
+Q.R
+}                                       !! end of ^UD
+
 !! Check for command line switches.
 
 !! Y short hand for read command arg
@@ -498,28 +520,6 @@ G.F                     !! retrive file names
         0,5:W^[                          !   turn hold mode off          !
 '                                       ! endif                         !
 +
-
-!! Insert paired delimiter
-
-@^UD{
-U.B U.0                                 !! save m,n to .0 and .B
-Q.0 U.R                                 !! .R = .0
-QP "T                                   !! if /P
-        Q.B "G                          !!   if .B > 0
-                Q.0-^^( "E ^^)U.R '     !!     produced matched parenthesis
-                Q.0-^^[ "E ^^]U.R '
-                Q.0-^^< "E ^^>U.R '
-                Q.0-^^{ "E 125U.R '
-
-        |
-                Q.0-^^) "E ^^(U.R '     !!     reverse matched parenthesis
-                Q.0-^^] "E ^^[U.R '
-                Q.0-^^> "E ^^<U.R '
-                Q.0-125 "E ^^{U.R '
-        '                               !!  fi
-'                                       !! fi
-Q.R
-}
 
 !! ---------------------------------------------------------------------
 !! main loop start
