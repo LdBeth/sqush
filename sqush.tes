@@ -157,7 +157,7 @@ Q.1J                            !! restore to original buffer position
 
 !! Insert paired delimiter
 
-@^UD{
+@^UD*
 U.B U.0                                 !! save m,n to .0 and .B
 Q.0 U.R                                 !! .R = .0
 QP "T                                   !! if /P
@@ -165,17 +165,17 @@ QP "T                                   !! if /P
                 Q.0-^^( "E ^^)U.R '     !!     produced matched parenthesis
                 Q.0-^^[ "E ^^]U.R '
                 Q.0-^^< "E ^^>U.R '
-                Q.0-^^{ "E 125U.R '
+                Q.0-^^{ "E ^^}U.R '
 
         |
                 Q.0-^^) "E ^^(U.R '     !!     reverse matched parenthesis
                 Q.0-^^] "E ^^[U.R '
                 Q.0-^^> "E ^^<U.R '
-                Q.0-125 "E ^^{U.R '
+                Q.0-^^} "E ^^{U.R '
         '                               !!  fi
 '                                       !! fi
 Q.R
-}                                       !! end of ^UD
+*                                       !! end of ^UD
 
 !! Check for command line switches.
 
