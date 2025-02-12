@@ -155,7 +155,7 @@ Q.1J                            !! restore to original buffer position
 
 }                               !! end of ^UR
 
-!! Insert paired delimiter
+!! Translate paired delimiter
 
 @^UD*
 U.B U.0                                 !! save m,n to .0 and .B
@@ -1116,12 +1116,9 @@ QC-1J                                   ! jump 1 char before F command  !
 
 QTJ                                     ! jump to end of text1          !
 Q0@I%%                                  ! insert <delim>                !
-QP "T                                   !! if /P
-        Q0-^^) "E @I%(% '               !!   insert additional
-        Q0-^^] "E @I%[% '               !!    pair delimiters
-        Q0-^^> "E @I%<% '
-        Q0-125 "E @I%{% '
-'                                       !! fi
+Q0,-1MD-Q0 "N                           !! insert additional
+        Q0,-1MD@I%%                     !!    pair delimiters
+'                                       !!
 QU-QTC                                  ! advance to end of text2       !
 Q0@I%%                                  ! insert <delim>                !
 0U1                                     ! clear @-modified flag         !
