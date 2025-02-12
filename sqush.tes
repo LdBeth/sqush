@@ -58,7 +58,14 @@ EO - 200 "L
 !!         .       (dot) pass character through w/o squishing
 !!         @       the next command is '@' modified
 
-!! Load Q-register F with SQU initialization macro.
+! --------------------------------------------------------------------- !
+! Load Q-register F with SQU initialization macro.  This macro loads	!
+! other macros into various Q-registers and handles the command	line	!
+! switches:   either taking them from the command line in the edit	!
+! buffer or prompting the user for them.  When this macro is done,  	!
+! SQU will be poised to run and the only thing left in the edit buffer	!
+! will be the input and output filenames.				!
+! --------------------------------------------------------------------- !
 ^UF                             !! initialization macro
 ^D                              !! set decimal
 0ED                             !! set edit mode zero
